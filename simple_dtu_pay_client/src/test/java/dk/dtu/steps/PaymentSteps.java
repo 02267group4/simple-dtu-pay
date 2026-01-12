@@ -16,6 +16,8 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 
 public class PaymentSteps {
 
@@ -99,6 +101,13 @@ public class PaymentSteps {
         Account account = bank.getAccount(merchantBankId);
         assertEquals(BigDecimal.valueOf(expectedBalance), account.getBalance());
     }
+
+    /***
+    @Then("this should fail")
+    public void thisShouldFail() {
+        fail("Forced failure");
+    }
+    ***/
 
     @After
     public void cleanup() {
