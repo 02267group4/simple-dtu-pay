@@ -11,6 +11,9 @@ public final class AppContext {
     public static final MerchantRepository merchantRepo = new MerchantRepository();
     public static final PaymentRepository paymentRepo   = new PaymentRepository();
 
+    public static final TokenRepository tokenRepo = new TokenRepository();
+    public static final TokenService tokenService = new TokenService(customerRepo, tokenRepo);
+
     // Shared services
     public static final CustomerService customerService = new CustomerService(customerRepo);
     public static final MerchantService merchantService = new MerchantService(merchantRepo);
@@ -20,7 +23,7 @@ public final class AppContext {
 
     // Payment service depends on repos + bank
     public static final PaymentService paymentService =
-            new PaymentService(customerRepo, merchantRepo, paymentRepo, bank);
+            new PaymentService(customerRepo, merchantRepo, paymentRepo, tokenRepo, bank);
 
     private AppContext() {}
 }
