@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>dk.dtu</groupId>
+    <artifactId>simple-dtu-pay-client</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Simple DTU Pay - Cucumber Test Client</name>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Updated to latest stable versions as of early 2026 -->
+        <cucumber.version>7.20.1</cucumber.version>
+        <junit.version>4.13.2</junit.version>
+        <resteasy.version>6.2.11.Final</resteasy.version>
+        <quarkus.version>3.17.2</quarkus.version>
+    </properties>
+
+    <dependencies>
+        <!-- Cucumber Dependencies -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+    <groupId>com.sun.xml.ws</groupId>
+    <artifactId>jaxws-ri</artifactId>
+    <version>4.0.3</version>
+    <type>pom</type>
+</dependency>
+
+        <!-- JUnit (required by older Cucumber JUnit integration) -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- RESTEasy Client for calling the Quarkus REST service -->
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-client</artifactId>
+            <version>${resteasy.version}</version>
+        </dependency>
+
+        <!-- JSON-B support (used by RESTEasy client for JSON serialization/deserialization) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-jsonb</artifactId>
+            <version>${quarkus.version}</version>
+        </dependency>
+
+        <!-- JAXB support (optional, kept for future SOAP/XML tasks) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-resteasy-jaxb</artifactId>
+            <version>3.17.1</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Maven Compiler Plugin for Java 21 -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+    <groupId>com.sun.xml.ws</groupId>
+    <artifactId>jaxws-maven-plugin</artifactId>
+    <version>4.0.3</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>wsimport</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <wsdlUrls>
+            <wsdlUrl>http://fm-00.compute.dtu.dk/services/BankService?wsdl</wsdlUrl>
+        </wsdlUrls>
+        <keep>true</keep>
+        <packageName>dtu.ws.fastmoney</packageName>
+        <sourceDestDir>src/main/java</sourceDestDir>
+    </configuration>
+</plugin>
+
+            <!-- Surefire Plugin to run tests (including Cucumber) -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/Test*.java</include>
+                        <include>**/*StepDefinitions.java</include>
+                    </includes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
