@@ -12,26 +12,34 @@ public class PaymentService {
     private final CustomerRepository customers;
     private final MerchantRepository merchants;
     private final PaymentRepository payments;
+    private final TokenRepository tokens;
     private final BankService bank;
 
     public PaymentService(CustomerRepository customers,
                           MerchantRepository merchants,
                           PaymentRepository payments,
+                          TokenRepository tokens,
                           BankService bank) {
         this.customers = customers;
         this.merchants = merchants;
         this.payments = payments;
+        this.tokens = tokens;
         this.bank = bank;
     }
 
     public Payment pay(PaymentRequest request)
             throws UnknownCustomerException, UnknownMerchantException, BankFailureException {
 
-        Customer c = customers.get(request.customerId);
+        String customerId = tokens.consume(request.token);
+        if (customerId == null) {
+            throw new UnknownCustomerException("Invalid or already used token");
+        }
+
+        Customer c = customers.get(customerId);
         Merchant m = merchants.get(request.merchantId);
 
         if (c == null) {
-            throw new UnknownCustomerException("customer with id \"" + request.customerId + "\" is unknown");
+            throw new UnknownCustomerException("customer with id \"" + customerId + "\" is unknown");
         }
         if (m == null) {
             throw new UnknownMerchantException("merchant with id \"" + request.merchantId + "\" is unknown");
@@ -42,7 +50,7 @@ public class PaymentService {
                     c.bankAccountId,
                     m.bankAccountId,
                     BigDecimal.valueOf(request.amount),
-                    "DTU Pay: " + request.customerId + " -> " + request.merchantId
+                    "DTU Pay: " + customerId + " -> " + request.merchantId
             );
         } catch (BankServiceException_Exception e) {
             throw new BankFailureException("Bank failed: " + e.getMessage());
@@ -51,7 +59,7 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.id = UUID.randomUUID().toString();
         payment.amount = request.amount;
-        payment.customerId = request.customerId;
+        payment.customerId = customerId;
         payment.merchantId = request.merchantId;
 
         payments.add(payment);

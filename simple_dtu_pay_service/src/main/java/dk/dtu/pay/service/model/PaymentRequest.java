@@ -4,9 +4,10 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
 public class PaymentRequest {
-    public int amount;
-    public String customerId;
+    public String token;
     public String merchantId;
+    public int amount;
+    public String description;
 
     public PaymentRequest() {
     }

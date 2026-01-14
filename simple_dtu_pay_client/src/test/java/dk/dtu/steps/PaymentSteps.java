@@ -14,9 +14,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
 public class PaymentSteps {
@@ -37,6 +35,10 @@ public class PaymentSteps {
     private final List<String> accountsToRetire = new ArrayList<>();
 
     private boolean paymentSuccess;
+
+    // for token implementation
+    private String customerToken;
+    private String paymentDescription = "cucumber-test-payment";
 
     @Given("a customer with name {string}, CPR {string}, and balance {int}")
     public void createCustomer(String name, String cpr, int balance) throws Exception {
@@ -76,10 +78,20 @@ public class PaymentSteps {
         merchantId = dtuPay.register(m);
     }
 
-    @When("the merchant initiates a payment for {int} kr by the customer")
+    @Given("the customer has a valid token")
+    public void customerHasValidToken() {
+        // You’ll implement this in SimpleDTUPay (or whatever service owns tokens)
+        // For now: acquire exactly 1 token and store it in this.customerToken
+        customerToken = dtuPay.requestToken(customerId);
+
+        assertNotNull("Token must not be null", customerToken);
+        assertFalse("Token must not be empty", customerToken.isBlank());
+    }
+
+    @When("the merchant initiates a payment for {int} kr by the customer using the token")
     public void makePayment(int amount) {
         try {
-            paymentSuccess = dtuPay.pay(amount, customerId, merchantId);
+            paymentSuccess = dtuPay.pay(customerToken, merchantId, amount, paymentDescription);
         } catch (Exception e) {
             paymentSuccess = false;
         }
@@ -101,6 +113,21 @@ public class PaymentSteps {
         Account account = bank.getAccount(merchantBankId);
         assertEquals(BigDecimal.valueOf(expectedBalance), account.getBalance());
     }
+
+    @When("the merchant initiates a payment for {int} kr by the customer without a token")
+    public void makePaymentWithoutToken(int amount) {
+        try {
+            paymentSuccess = dtuPay.pay(null, merchantId, amount, paymentDescription);
+        } catch (Exception e) {
+            paymentSuccess = false;
+        }
+    }
+
+    @Then("the payment is rejected")
+    public void verifyRejected() {
+        assertFalse("Payment should be rejected", paymentSuccess);
+    }
+
 
     /***
     @Then("this should fail")
