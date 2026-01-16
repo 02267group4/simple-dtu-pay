@@ -1,7 +1,7 @@
-package dk.dtu.pay.service.api;
+package dk.dtu.pay.customer.adapter.in.rest;
 
 import dk.dtu.pay.service.AppContext;
-import dk.dtu.pay.service.model.Customer;
+import dk.dtu.pay.customer.domain.model.Customer;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;

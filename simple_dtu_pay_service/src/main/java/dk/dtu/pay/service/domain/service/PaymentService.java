@@ -1,5 +1,7 @@
 package dk.dtu.pay.service.service;
 
+import dk.dtu.pay.customer.application.port.out.CustomerRepositoryPort;
+import dk.dtu.pay.customer.domain.model.Customer;
 import dk.dtu.pay.service.model.*;
 import dk.dtu.pay.service.repository.*;
 import dtu.ws.fastmoney.*;
@@ -9,13 +11,13 @@ import java.util.UUID;
 
 public class PaymentService {
 
-    private final CustomerRepository customers;
+    private final CustomerRepositoryPort customers;
     private final MerchantRepository merchants;
     private final PaymentRepository payments;
     private final TokenRepository tokens;
     private final BankService bank;
 
-    public PaymentService(CustomerRepository customers,
+    public PaymentService(CustomerRepositoryPort customers,
                           MerchantRepository merchants,
                           PaymentRepository payments,
                           TokenRepository tokens,
@@ -47,7 +49,7 @@ public class PaymentService {
 
         try {
             bank.transferMoneyFromTo(
-                    c.bankAccountId,
+                    c.getBankAccountId(),
                     m.bankAccountId,
                     BigDecimal.valueOf(request.amount),
                     "DTU Pay: " + customerId + " -> " + request.merchantId

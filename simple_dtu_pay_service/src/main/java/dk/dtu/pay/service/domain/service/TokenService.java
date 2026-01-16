@@ -1,16 +1,16 @@
 package dk.dtu.pay.service.service;
 
-import dk.dtu.pay.service.repository.CustomerRepository;
+import dk.dtu.pay.customer.application.port.out.CustomerRepositoryPort;
 import dk.dtu.pay.service.repository.TokenRepository;
 
 import java.util.UUID;
 
 public class TokenService {
 
-    private final CustomerRepository customerRepo;
+    private final CustomerRepositoryPort customerRepo;
     private final TokenRepository tokenRepo;
 
-    public TokenService(CustomerRepository customerRepo, TokenRepository tokenRepo) {
+    public TokenService(CustomerRepositoryPort customerRepo, TokenRepository tokenRepo) {
         this.customerRepo = customerRepo;
         this.tokenRepo = tokenRepo;
     }
