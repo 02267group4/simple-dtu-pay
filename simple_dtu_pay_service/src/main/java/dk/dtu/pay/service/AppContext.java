@@ -6,7 +6,7 @@ import dk.dtu.pay.customer.domain.service.CustomerService;
 
 import dk.dtu.pay.merchant.adapter.out.persistence.MerchantRepository;
 import dk.dtu.pay.merchant.application.port.out.MerchantRepositoryPort;
-import dk.dtu.pay.merchant.service.MerchantService;
+import dk.dtu.pay.merchant.domain.service.MerchantService;
 
 import dk.dtu.pay.service.repository.PaymentRepository;
 import dk.dtu.pay.service.repository.TokenRepository;

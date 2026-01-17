@@ -1,4 +1,4 @@
-package dk.dtu.pay.merchant.service;
+package dk.dtu.pay.merchant.domain.service;
 
 import dk.dtu.pay.merchant.application.port.out.MerchantRepositoryPort;
 import dk.dtu.pay.merchant.domain.model.Merchant;
