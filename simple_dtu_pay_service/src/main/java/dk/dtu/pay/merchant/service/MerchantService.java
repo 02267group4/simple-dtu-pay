@@ -1,15 +1,15 @@
-package dk.dtu.pay.service.service;
+package dk.dtu.pay.merchant.service;
 
-import dk.dtu.pay.service.model.Merchant;
-import dk.dtu.pay.service.repository.MerchantRepository;
+import dk.dtu.pay.merchant.application.port.out.MerchantRepositoryPort;
+import dk.dtu.pay.merchant.domain.model.Merchant;
 
 import java.util.UUID;
 
 public class MerchantService {
 
-    private final MerchantRepository repo;
+    private final MerchantRepositoryPort repo;
 
-    public MerchantService(MerchantRepository repo) {
+    public MerchantService(MerchantRepositoryPort repo) {
         this.repo = repo;
     }
 

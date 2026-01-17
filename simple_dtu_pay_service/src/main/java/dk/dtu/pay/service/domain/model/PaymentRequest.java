@@ -1,4 +1,4 @@
-package dk.dtu.pay.service.model;
+package dk.dtu.pay.service.domain.model;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 

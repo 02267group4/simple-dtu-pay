@@ -1,9 +1,9 @@
 package dk.dtu.pay.service.repository;
 
-import dk.dtu.pay.service.model.Payment;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import dk.dtu.pay.service.domain.model.Payment;
 
 public class PaymentRepository {
     private final List<Payment> payments = new CopyOnWriteArrayList<>();

@@ -1,8 +1,8 @@
 package dk.dtu.pay.service.api;
 
 import dk.dtu.pay.service.AppContext;
-import dk.dtu.pay.service.model.Token;
-import dk.dtu.pay.service.model.TokenRequest;
+import dk.dtu.pay.service.domain.model.Token;
+import dk.dtu.pay.service.domain.model.TokenRequest;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -30,7 +30,7 @@ public class TokenResource {
                     .entity(new Token(token))
                     .build();
         } catch (IllegalArgumentException e) {
-            // customer not found
+            // customer not found or invalid request
             return Response.status(Response.Status.NOT_FOUND)
                     .entity(e.getMessage())
                     .build();

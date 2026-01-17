@@ -1,5 +1,4 @@
-package dk.dtu.pay.service.service;
-
+package dk.dtu.pay.service.domain.service;
 import dk.dtu.pay.customer.application.port.out.CustomerRepositoryPort;
 import dk.dtu.pay.service.repository.TokenRepository;
 

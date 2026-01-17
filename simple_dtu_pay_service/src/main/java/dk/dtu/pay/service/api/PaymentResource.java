@@ -1,15 +1,18 @@
 package dk.dtu.pay.service.api;
 
-import dk.dtu.pay.service.AppContext;
-import dk.dtu.pay.service.model.Payment;
-import dk.dtu.pay.service.model.PaymentRequest;
-import dk.dtu.pay.service.service.PaymentService;
+import java.util.List;
 
-import jakarta.ws.rs.*;
+import dk.dtu.pay.service.AppContext;
+import dk.dtu.pay.service.domain.model.Payment;
+import dk.dtu.pay.service.domain.model.PaymentRequest;
+import dk.dtu.pay.service.domain.service.PaymentService;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-
-import java.util.List;
 
 @Path("/payments")
 @Produces(MediaType.APPLICATION_JSON)
@@ -20,13 +23,13 @@ public class PaymentResource {
     public Response pay(PaymentRequest request) {
         try {
             Payment payment = AppContext.paymentService.pay(request);
-            return Response.status(201).entity(payment).build();
+            return Response.status(Response.Status.CREATED).entity(payment).build();
 
         } catch (PaymentService.UnknownCustomerException | PaymentService.UnknownMerchantException e) {
-            return Response.status(404).entity(e.getMessage()).build();
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 
         } catch (PaymentService.BankFailureException e) {
-            return Response.status(409).entity(e.getMessage()).build();
+            return Response.status(Response.Status.BAD_GATEWAY).entity(e.getMessage()).build();
         }
     }
 
