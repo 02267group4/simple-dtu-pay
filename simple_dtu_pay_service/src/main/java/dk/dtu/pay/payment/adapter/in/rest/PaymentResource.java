@@ -1,28 +1,28 @@
-package dk.dtu.pay.service.api;
+// PaymentResource.java
+package dk.dtu.pay.payment.adapter.in.rest;
 
-import java.util.List;
-
-import dk.dtu.pay.service.AppContext;
-import dk.dtu.pay.service.domain.model.Payment;
-import dk.dtu.pay.service.domain.model.PaymentRequest;
-import dk.dtu.pay.service.domain.service.PaymentService;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import dk.dtu.pay.payment.domain.model.Payment;
+import dk.dtu.pay.payment.domain.model.PaymentRequest;
+import dk.dtu.pay.payment.domain.service.PaymentService;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import java.util.List;
 
 @Path("/payments")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class PaymentResource {
 
+    @Inject
+    PaymentService paymentService;
+
     @POST
     public Response pay(PaymentRequest request) {
         try {
-            Payment payment = AppContext.paymentService.pay(request);
+            Payment payment = paymentService.pay(request);
             return Response.status(Response.Status.CREATED).entity(payment).build();
 
         } catch (PaymentService.UnknownCustomerException | PaymentService.UnknownMerchantException e) {
@@ -35,6 +35,6 @@ public class PaymentResource {
 
     @GET
     public List<Payment> getPayments() {
-        return AppContext.paymentService.getPayments();
+        return paymentService.getPayments();
     }
 }

@@ -19,4 +19,13 @@ public class TokenService {
         tokenRepo.store(token, customerId);
         return token;
     }
+
+    public String consumeToken(String token) throws InvalidTokenException {
+        return tokenRepo.consume(token)
+                .orElseThrow(() -> new InvalidTokenException("Invalid or already used token"));
+    }
+
+    public static class InvalidTokenException extends Exception {
+        public InvalidTokenException(String msg) { super(msg); }
+    }
 }
