@@ -2,9 +2,11 @@ package dk.dtu.pay.merchant.domain.service;
 
 import dk.dtu.pay.merchant.application.port.out.MerchantRepositoryPort;
 import dk.dtu.pay.merchant.domain.model.Merchant;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.UUID;
 
+@ApplicationScoped
 public class MerchantService {
 
     private final MerchantRepositoryPort repo;

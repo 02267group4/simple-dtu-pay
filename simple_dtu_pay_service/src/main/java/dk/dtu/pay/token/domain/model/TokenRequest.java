@@ -1,4 +1,4 @@
-package dk.dtu.pay.service.domain.model;
+package dk.dtu.pay.token.domain.model;
 
 public class TokenRequest {
     public String customerId;

@@ -1,8 +1,8 @@
 package dk.dtu.pay.merchant.adapter.in.rest;
 
 import dk.dtu.pay.merchant.domain.model.Merchant;
-import dk.dtu.pay.service.AppContext;
-
+import dk.dtu.pay.merchant.domain.service.MerchantService;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -12,6 +12,9 @@ import jakarta.ws.rs.core.Response;
 @Consumes(MediaType.APPLICATION_JSON)
 public class MerchantResource {
 
+    @Inject
+    MerchantService merchantService;
+
     @POST
     public Response register(Merchant req) {
         if (req == null || req.name == null || req.name.isBlank()) {
@@ -19,14 +22,14 @@ public class MerchantResource {
                     .entity("name is required")
                     .build();
         }
-        Merchant saved = AppContext.merchantService.registerMerchant(req);
+        Merchant saved = merchantService.registerMerchant(req);
         return Response.status(Response.Status.CREATED).entity(saved).build();
     }
 
     @DELETE
     @Path("/{id}")
     public Response delete(@PathParam("id") String id) {
-        AppContext.merchantService.deleteMerchant(id);
+        merchantService.deleteMerchant(id);
         return Response.noContent().build();
     }
 }

@@ -1,10 +1,12 @@
 package dk.dtu.pay.customer.domain.service;
 
-import dk.dtu.pay.customer.domain.model.Customer;
 import dk.dtu.pay.customer.application.port.out.CustomerRepositoryPort;
+import dk.dtu.pay.customer.domain.model.Customer;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.UUID;
 
+@ApplicationScoped
 public class CustomerService {
 
     private final CustomerRepositoryPort repo;
@@ -21,6 +23,6 @@ public class CustomerService {
     }
 
     public void deleteCustomer(String id) {
-        // Implementation depends on whether you added delete to CustomerRepositoryPort
+        repo.remove(id); // make sure your port+repo actually has remove/delete
     }
 }

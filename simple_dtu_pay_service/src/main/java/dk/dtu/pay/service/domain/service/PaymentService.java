@@ -7,7 +7,7 @@ import dk.dtu.pay.merchant.domain.model.Merchant;
 import dk.dtu.pay.service.domain.model.Payment;
 import dk.dtu.pay.service.domain.model.PaymentRequest;
 import dk.dtu.pay.service.repository.PaymentRepository;
-import dk.dtu.pay.service.repository.TokenRepository;
+import dk.dtu.pay.token.application.port.out.TokenRepositoryPort;
 import dtu.ws.fastmoney.BankService;
 import dtu.ws.fastmoney.BankServiceException_Exception;
 
@@ -20,14 +20,15 @@ public class PaymentService {
     private final CustomerRepositoryPort customers;
     private final MerchantRepositoryPort merchants;
     private final PaymentRepository payments;
-    private final TokenRepository tokens;
+    private final TokenRepositoryPort tokens;
     private final BankService bank;
 
     public PaymentService(CustomerRepositoryPort customers,
                           MerchantRepositoryPort merchants,
                           PaymentRepository payments,
-                          TokenRepository tokens,
+                          TokenRepositoryPort tokens,
                           BankService bank) {
+
         this.customers = customers;
         this.merchants = merchants;
         this.payments = payments;
@@ -38,10 +39,10 @@ public class PaymentService {
     public Payment pay(PaymentRequest request)
             throws UnknownCustomerException, UnknownMerchantException, BankFailureException {
 
-        String customerId = tokens.consume(request.token);
-        if (customerId == null) {
-            throw new UnknownCustomerException("Invalid or already used token");
-        }
+        String customerId = tokens.consume(request.token)
+                .orElseThrow(() ->
+                        new UnknownCustomerException("Invalid or already used token"));
+
 
         Customer c = customers.get(customerId);
         Merchant m = merchants.get(request.merchantId);

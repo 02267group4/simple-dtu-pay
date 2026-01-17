@@ -9,16 +9,18 @@ import dk.dtu.pay.merchant.application.port.out.MerchantRepositoryPort;
 import dk.dtu.pay.merchant.domain.service.MerchantService;
 
 import dk.dtu.pay.service.repository.PaymentRepository;
-import dk.dtu.pay.service.repository.TokenRepository;
 import dk.dtu.pay.service.domain.service.PaymentService;
-import dk.dtu.pay.service.domain.service.TokenService;
+
+import dk.dtu.pay.token.application.port.out.TokenRepositoryPort;
+import dk.dtu.pay.token.adapter.out.persistence.InMemoryTokenRepository;
+import dk.dtu.pay.token.domain.service.TokenService;
 
 import dtu.ws.fastmoney.BankService;
 import dtu.ws.fastmoney.BankService_Service;
 
 public final class AppContext {
 
-    // Shared in-memory storage (your "DB")
+    // Shared in-memory storage
     public static final CustomerRepositoryPort customerRepo =
             new InMemoryCustomerRepository();
 
@@ -28,12 +30,12 @@ public final class AppContext {
     public static final PaymentRepository paymentRepo =
             new PaymentRepository();
 
-    public static final TokenRepository tokenRepo =
-            new TokenRepository();
+    public static final TokenRepositoryPort tokenRepo =
+            new InMemoryTokenRepository();
 
     // Shared services
     public static final TokenService tokenService =
-            new TokenService(customerRepo, tokenRepo);
+            new TokenService(tokenRepo);
 
     public static final CustomerService customerService =
             new CustomerService(customerRepo);
@@ -45,11 +47,9 @@ public final class AppContext {
     public static final BankService bank =
             new BankService_Service().getBankServicePort();
 
-    // Payment service depends on repos + bank
+    // Payment service
     public static final PaymentService paymentService =
             new PaymentService(customerRepo, merchantRepo, paymentRepo, tokenRepo, bank);
 
-    private AppContext() {
-        // prevent instantiation
-    }
+    private AppContext() {}
 }
