@@ -9,6 +9,15 @@ public class Payment {
     public String customerId;
     public String merchantId;
 
+    public Status status;
+    public String failureReason;
+
     public Payment() {
+    }
+
+    public enum Status {
+        PENDING,
+        COMPLETED,
+        FAILED
     }
 }
