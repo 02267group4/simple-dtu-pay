@@ -1,23 +1,18 @@
+// java
 package dk.dtu.pay.payment.adapter.in.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import dk.dtu.pay.customer.application.port.out.CustomerRepositoryPort;
-import dk.dtu.pay.customer.domain.model.Customer;
-import dk.dtu.pay.merchant.application.port.out.MerchantRepositoryPort;
-import dk.dtu.pay.merchant.domain.model.Merchant;
-import dk.dtu.pay.payment.application.port.out.PaymentRepositoryPort;
-import dk.dtu.pay.payment.domain.model.Payment;
+import dk.dtu.pay.payment.domain.service.PaymentService;
 import dk.dtu.pay.token.adapter.out.messaging.dto.TokenRejected;
 import dk.dtu.pay.token.adapter.out.messaging.dto.TokenValidated;
-import dtu.ws.fastmoney.BankService;
-import dtu.ws.fastmoney.BankServiceException_Exception;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 
 @ApplicationScoped
 public class RabbitMQTokenResultConsumer {
@@ -28,22 +23,35 @@ public class RabbitMQTokenResultConsumer {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Inject PaymentRepositoryPort payments;
-    @Inject CustomerRepositoryPort customers;
-    @Inject MerchantRepositoryPort merchants;
-    @Inject BankService bank;
+    private final PaymentService paymentService;
 
-    public RabbitMQTokenResultConsumer() {
+    @Inject
+    public RabbitMQTokenResultConsumer(PaymentService paymentService) {
+        this.paymentService = paymentService;
+    }
+
+    @PostConstruct
+    void init() {
+        System.out.println("RabbitMQTokenResultConsumer @PostConstruct paymentService=" +
+                (paymentService == null ? "NULL" : "OK") + " this@" + System.identityHashCode(this));
+    }
+
+    public void startListening() {
         new Thread(this::start).start();
     }
 
     private void start() {
         try {
             ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost(System.getenv().getOrDefault("RABBIT_HOST", "localhost"));
+            String host = System.getenv().getOrDefault("RABBIT_HOST", "localhost");
+            factory.setHost(host);
+
+            System.out.println("RabbitMQTokenResultConsumer starting — will connect to: " + host);
 
             Connection connection = factory.newConnection();
             Channel channel = connection.createChannel();
+
+            System.out.println("RabbitMQTokenResultConsumer connected to RabbitMQ");
 
             channel.exchangeDeclare(EXCHANGE, "topic");
 
@@ -54,60 +62,29 @@ public class RabbitMQTokenResultConsumer {
             channel.queueBind(qRejected, EXCHANGE, REJECTED_KEY);
 
             channel.basicConsume(qValidated, true, (tag, delivery) -> {
+                System.out.println("TokenValidated handler — this@" + System.identityHashCode(this));
+
+                String raw = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                System.out.println("TokenValidated raw body: " + raw);
+
                 TokenValidated ev = mapper.readValue(delivery.getBody(), TokenValidated.class);
-                handleValidated(ev);
-            }, tag -> {});
+                paymentService.completePaymentForValidatedToken(ev.paymentId(), ev.customerId());
+            }, consumerTag -> {});
 
             channel.basicConsume(qRejected, true, (tag, delivery) -> {
+                System.out.println("TokenRejected handler — this@" + System.identityHashCode(this));
+
+                String raw = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                System.out.println("TokenRejected raw body: " + raw);
+
                 TokenRejected ev = mapper.readValue(delivery.getBody(), TokenRejected.class);
-                handleRejected(ev);
-            }, tag -> {});
+                paymentService.failPayment(ev.paymentId(), ev.reason());
+            }, consumerTag -> {});
 
         } catch (Exception e) {
+            System.err.println("RabbitMQTokenResultConsumer failed to start:");
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }
-
-    private void handleValidated(TokenValidated ev) {
-        // YOU MUST HAVE: payments.get(id) and payments.update(payment)
-        Payment p = payments.get(ev.paymentId());
-        if (p == null) return;
-
-        p.customerId = ev.customerId();
-
-        Customer c = customers.get(p.customerId);
-        Merchant m = merchants.get(p.merchantId);
-        if (c == null || m == null) {
-            p.status = Payment.Status.FAILED;
-            p.failureReason = "Unknown customer/merchant after token validation";
-            payments.update(p);
-            return;
-        }
-
-        try {
-            bank.transferMoneyFromTo(
-                    c.getBankAccountId(),
-                    m.bankAccountId,
-                    BigDecimal.valueOf(p.amount),
-                    "DTU Pay: " + p.customerId + " -> " + p.merchantId
-            );
-            p.status = Payment.Status.COMPLETED;
-            p.failureReason = null;
-            payments.update(p);
-
-        } catch (BankServiceException_Exception e) {
-            p.status = Payment.Status.FAILED;
-            p.failureReason = "Bank failed: " + e.getMessage();
-            payments.update(p);
-        }
-    }
-
-    private void handleRejected(TokenRejected ev) {
-        Payment p = payments.get(ev.paymentId());
-        if (p == null) return;
-
-        p.status = Payment.Status.FAILED;
-        p.failureReason = ev.reason();
-        payments.update(p);
     }
 }

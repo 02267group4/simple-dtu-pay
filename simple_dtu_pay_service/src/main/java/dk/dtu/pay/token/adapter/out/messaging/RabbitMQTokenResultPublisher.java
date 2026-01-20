@@ -1,3 +1,4 @@
+// java
 package dk.dtu.pay.token.adapter.out.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,6 +8,8 @@ import com.rabbitmq.client.ConnectionFactory;
 import dk.dtu.pay.token.adapter.out.messaging.dto.TokenRejected;
 import dk.dtu.pay.token.adapter.out.messaging.dto.TokenValidated;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import java.nio.charset.StandardCharsets;
 
 @ApplicationScoped
 public class RabbitMQTokenResultPublisher {
@@ -35,6 +38,9 @@ public class RabbitMQTokenResultPublisher {
 
                 channel.exchangeDeclare(EXCHANGE, "topic");
                 byte[] body = mapper.writeValueAsBytes(payload);
+
+                // <-- ADDED: log the raw JSON payload and routing key
+                System.out.println("Publishing to " + routingKey + " payload: " + new String(body, StandardCharsets.UTF_8));
 
                 channel.basicPublish(EXCHANGE, routingKey, null, body);
             }

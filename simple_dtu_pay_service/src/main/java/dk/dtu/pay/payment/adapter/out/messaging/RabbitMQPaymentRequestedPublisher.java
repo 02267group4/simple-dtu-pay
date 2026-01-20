@@ -1,3 +1,4 @@
+// java
 package dk.dtu.pay.payment.adapter.out.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,6 +7,8 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import dk.dtu.pay.payment.adapter.out.messaging.dto.PaymentRequested;
 import jakarta.enterprise.context.ApplicationScoped;
+
+import java.nio.charset.StandardCharsets;
 
 @ApplicationScoped
 public class RabbitMQPaymentRequestedPublisher {
@@ -25,10 +28,12 @@ public class RabbitMQPaymentRequestedPublisher {
 
                 channel.exchangeDeclare(EXCHANGE, "topic");
 
-                PaymentRequested event =
-                        new PaymentRequested(paymentId, token);
+                PaymentRequested event = new PaymentRequested(paymentId, token);
 
                 byte[] body = mapper.writeValueAsBytes(event);
+
+                // <-- ADDED: log the raw JSON payload
+                System.out.println("Publishing PaymentRequested payload: " + new String(body, StandardCharsets.UTF_8));
 
                 channel.basicPublish(
                         EXCHANGE,
