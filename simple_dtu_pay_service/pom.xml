@@ -49,6 +49,16 @@
         </dependency>
 
         <dependency>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-messaging</artifactId>
+</dependency>
+
+ <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>smallrye-reactive-messaging-in-memory</artifactId>
+        </dependency>
+
+        <dependency>
     <groupId>com.sun.xml.ws</groupId>
     <artifactId>jaxws-ri</artifactId>
     <version>4.0.3</version>

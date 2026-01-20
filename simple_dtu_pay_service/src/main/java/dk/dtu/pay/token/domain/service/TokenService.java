@@ -21,11 +21,16 @@ public class TokenService {
     }
 
     public String consumeToken(String token) throws InvalidTokenException {
+        if (token == null) {
+            throw new InvalidTokenException("Token cannot be null");
+        }
         return tokenRepo.consume(token)
                 .orElseThrow(() -> new InvalidTokenException("Invalid or already used token"));
     }
 
     public static class InvalidTokenException extends Exception {
-        public InvalidTokenException(String msg) { super(msg); }
+        public InvalidTokenException(String msg) {
+            super(msg);
+        }
     }
 }

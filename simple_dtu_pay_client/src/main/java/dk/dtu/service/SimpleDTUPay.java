@@ -32,9 +32,9 @@ public class SimpleDTUPay {
     }
 
     public String register(Merchant merchant) {
-         try (Response response = target.path("merchants")
-                    .request(MediaType.APPLICATION_JSON)
-                    .post(Entity.entity(merchant, MediaType.APPLICATION_JSON))) {
+        try (Response response = target.path("merchants")
+                .request(MediaType.APPLICATION_JSON)
+                .post(Entity.entity(merchant, MediaType.APPLICATION_JSON))) {
 
             if (response.getStatus() != 201)
                 throw new RuntimeException("Reg failed");
@@ -92,6 +92,13 @@ public class SimpleDTUPay {
         try (Response r = target.path("merchants/" + id).request().delete()) {
             r.getStatus();
         }
+    }
+
+    public List<Payment> getManagerReport() {
+        return target.path("manager/reports")
+                .request(MediaType.APPLICATION_JSON)
+                .get(new GenericType<List<Payment>>() {
+                });
     }
 
     public void close() {
