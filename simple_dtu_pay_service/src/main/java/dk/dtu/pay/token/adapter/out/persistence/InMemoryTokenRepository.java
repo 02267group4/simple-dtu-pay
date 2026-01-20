@@ -1,3 +1,4 @@
+// java
 package dk.dtu.pay.token.adapter.out.persistence;
 
 import dk.dtu.pay.token.application.port.out.TokenRepositoryPort;
@@ -20,6 +21,10 @@ public class InMemoryTokenRepository implements TokenRepositoryPort {
 
     @Override
     public Optional<String> consume(String token) {
+        // handle null token safely: return empty instead of causing NPE
+        if (token == null) {
+            return Optional.empty();
+        }
         // single-use: remove on read
         return Optional.ofNullable(tokenToCustomer.remove(token));
     }

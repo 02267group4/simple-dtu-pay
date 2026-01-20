@@ -1,5 +1,21 @@
-*
-!target/*-runner
-!target/*-runner.jar
-!target/lib/*
-!target/quarkus-app/*
+# keep files needed for the Docker build
+!pom.xml
+!src/**
+
+# ignore build outputs
+target/
+*.jar
+*.war
+*.class
+
+# IDE / OS
+.idea
+*.iml
+.vscode
+.DS_Store
+*.log
+*.swp
+
+# Git
+.git
+.gitignore

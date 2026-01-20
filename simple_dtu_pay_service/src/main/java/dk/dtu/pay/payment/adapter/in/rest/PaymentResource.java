@@ -1,4 +1,3 @@
-// PaymentResource.java
 package dk.dtu.pay.payment.adapter.in.rest;
 
 import dk.dtu.pay.payment.domain.model.Payment;
@@ -23,13 +22,16 @@ public class PaymentResource {
     public Response pay(PaymentRequest request) {
         try {
             Payment payment = paymentService.pay(request);
-            return Response.status(Response.Status.CREATED).entity(payment).build();
 
-        } catch (PaymentService.UnknownCustomerException | PaymentService.UnknownMerchantException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            // async → request accepted, processing continues in background
+            return Response.status(Response.Status.ACCEPTED)
+                    .entity(payment)
+                    .build();
 
-        } catch (PaymentService.BankFailureException e) {
-            return Response.status(Response.Status.BAD_GATEWAY).entity(e.getMessage()).build();
+        } catch (PaymentService.UnknownMerchantException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(e.getMessage())
+                    .build();
         }
     }
 

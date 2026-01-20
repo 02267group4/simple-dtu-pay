@@ -1,4 +1,3 @@
-// InMemoryPaymentRepository.java
 package dk.dtu.pay.payment.adapter.out.persistence;
 
 import dk.dtu.pay.payment.application.port.out.PaymentRepositoryPort;
@@ -6,20 +5,31 @@ import dk.dtu.pay.payment.domain.model.Payment;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @ApplicationScoped
 public class InMemoryPaymentRepository implements PaymentRepositoryPort {
 
-    private final List<Payment> payments = new CopyOnWriteArrayList<>();
+    private final ConcurrentMap<String, Payment> byId = new ConcurrentHashMap<>();
 
     @Override
     public void add(Payment p) {
-        payments.add(p);
+        byId.put(p.id, p);
     }
 
     @Override
     public List<Payment> all() {
-        return List.copyOf(payments);
+        return List.copyOf(byId.values());
+    }
+
+    @Override
+    public Payment get(String id) {
+        return byId.get(id);
+    }
+
+    @Override
+    public void update(Payment p) {
+        byId.put(p.id, p);
     }
 }
