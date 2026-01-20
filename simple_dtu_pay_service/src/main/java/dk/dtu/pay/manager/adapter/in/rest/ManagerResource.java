@@ -54,11 +54,17 @@ public class ManagerResource {
     }
 
     @Incoming("manager-replies-in")
-    public void onReportResponse(byte[] rawResponse) {
+    public void onReportResponse(String rawResponse) {
         try {
             ManagerReportResponse response = mapper.readValue(rawResponse, ManagerReportResponse.class);
 
             if (response.correlationId == null) {
+                return;
+            }
+
+            if (response.payments == null) {
+                System.err.println("MANAGER_FACADE: Received response with NULL payments. [CorrId: "
+                        + response.correlationId + "]");
                 return;
             }
 

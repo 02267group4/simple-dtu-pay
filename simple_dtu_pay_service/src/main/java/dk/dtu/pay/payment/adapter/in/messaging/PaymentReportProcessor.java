@@ -1,6 +1,5 @@
 package dk.dtu.pay.payment.adapter.in.messaging;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dtu.pay.manager.domain.model.ManagerReportEvents.*;
 import dk.dtu.pay.payment.application.port.out.PaymentRepositoryPort;
@@ -19,12 +18,11 @@ public class PaymentReportProcessor {
     @Inject
     PaymentRepositoryPort paymentRepository;
 
-    private final ObjectMapper mapper = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @Incoming("manager-requests-in")
     @Outgoing("manager-replies-out")
-    public String processManagerRequest(byte[] rawRequest) {
+    public String processManagerRequest(String rawRequest) {
         try {
             ManagerReportRequest request = mapper.readValue(rawRequest, ManagerReportRequest.class);
 
