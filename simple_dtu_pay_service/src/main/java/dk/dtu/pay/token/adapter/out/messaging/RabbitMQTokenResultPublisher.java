@@ -34,13 +34,14 @@ public class RabbitMQTokenResultPublisher {
             factory.setHost(System.getenv().getOrDefault("RABBIT_HOST", "localhost"));
 
             try (Connection connection = factory.newConnection();
-                 Channel channel = connection.createChannel()) {
+                    Channel channel = connection.createChannel()) {
 
-                channel.exchangeDeclare(EXCHANGE, "topic");
+                channel.exchangeDeclare(EXCHANGE, "topic", true);
                 byte[] body = mapper.writeValueAsBytes(payload);
 
                 // <-- ADDED: log the raw JSON payload and routing key
-                System.out.println("Publishing to " + routingKey + " payload: " + new String(body, StandardCharsets.UTF_8));
+                System.out.println(
+                        "Publishing to " + routingKey + " payload: " + new String(body, StandardCharsets.UTF_8));
 
                 channel.basicPublish(EXCHANGE, routingKey, null, body);
             }

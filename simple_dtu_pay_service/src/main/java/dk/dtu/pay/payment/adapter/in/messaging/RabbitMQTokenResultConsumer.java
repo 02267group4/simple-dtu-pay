@@ -53,7 +53,7 @@ public class RabbitMQTokenResultConsumer {
 
             System.out.println("RabbitMQTokenResultConsumer connected to RabbitMQ");
 
-            channel.exchangeDeclare(EXCHANGE, "topic");
+            channel.exchangeDeclare(EXCHANGE, "topic", true);
 
             String qValidated = channel.queueDeclare().getQueue();
             channel.queueBind(qValidated, EXCHANGE, VALIDATED_KEY);
@@ -69,7 +69,8 @@ public class RabbitMQTokenResultConsumer {
 
                 TokenValidated ev = mapper.readValue(delivery.getBody(), TokenValidated.class);
                 paymentService.completePaymentForValidatedToken(ev.paymentId(), ev.customerId());
-            }, consumerTag -> {});
+            }, consumerTag -> {
+            });
 
             channel.basicConsume(qRejected, true, (tag, delivery) -> {
                 System.out.println("TokenRejected handler — this@" + System.identityHashCode(this));
@@ -79,7 +80,8 @@ public class RabbitMQTokenResultConsumer {
 
                 TokenRejected ev = mapper.readValue(delivery.getBody(), TokenRejected.class);
                 paymentService.failPayment(ev.paymentId(), ev.reason());
-            }, consumerTag -> {});
+            }, consumerTag -> {
+            });
 
         } catch (Exception e) {
             System.err.println("RabbitMQTokenResultConsumer failed to start:");

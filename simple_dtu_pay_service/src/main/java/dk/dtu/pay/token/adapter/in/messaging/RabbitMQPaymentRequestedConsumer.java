@@ -26,7 +26,7 @@ public class RabbitMQPaymentRequestedConsumer {
 
     @Inject
     public RabbitMQPaymentRequestedConsumer(TokenService tokenService,
-                                            RabbitMQTokenResultPublisher publisher) {
+            RabbitMQTokenResultPublisher publisher) {
         this.tokenService = tokenService;
         this.publisher = publisher;
     }
@@ -35,7 +35,8 @@ public class RabbitMQPaymentRequestedConsumer {
     void init() {
         System.out.println("RabbitMQPaymentRequestedConsumer @PostConstruct publisher=" +
                 (publisher == null ? "NULL" : "OK") + " this@" + System.identityHashCode(this));
-        // Do NOT start the thread here; startup bean will explicitly call startListening()
+        // Do NOT start the thread here; startup bean will explicitly call
+        // startListening()
     }
 
     public void startListening() {
@@ -55,7 +56,7 @@ public class RabbitMQPaymentRequestedConsumer {
 
             System.out.println("RabbitMQPaymentRequestedConsumer connected to RabbitMQ");
 
-            channel.exchangeDeclare(EXCHANGE, "topic");
+            channel.exchangeDeclare(EXCHANGE, "topic", true);
             String queue = channel.queueDeclare().getQueue();
             channel.queueBind(queue, EXCHANGE, ROUTING_KEY);
 
@@ -74,7 +75,8 @@ public class RabbitMQPaymentRequestedConsumer {
                 } catch (Exception e) {
                     publisher.publishRejected(event.paymentId(), e.getMessage());
                 }
-            }, consumerTag -> {});
+            }, consumerTag -> {
+            });
 
         } catch (Exception e) {
             System.err.println("RabbitMQPaymentRequestedConsumer failed to start:");
