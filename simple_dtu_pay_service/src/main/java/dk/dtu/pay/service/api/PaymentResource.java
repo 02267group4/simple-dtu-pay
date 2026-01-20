@@ -10,6 +10,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -36,5 +37,20 @@ public class PaymentResource {
     @GET
     public List<Payment> getPayments() {
         return AppContext.paymentService.getPayments();
+    }
+    
+    // GET /payments/merchant/{merchantId}
+    @GET
+    @Path("/merchant/{merchantId}")
+    public Response getPaymentsForMerchant(@PathParam("merchantId") String merchantId) {
+        try {
+            List<Payment> results = AppContext.paymentService.getPaymentsForMerchant(merchantId);
+            return Response.ok(results).build();
+
+        } catch (PaymentService.UnknownMerchantException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(e.getMessage())
+                    .build();
+        }
     }
 }

@@ -1,6 +1,7 @@
 package dk.dtu.pay.merchant.adapter.in.rest;
 
 import dk.dtu.pay.merchant.domain.model.Merchant;
+import dk.dtu.pay.service.domain.service.PaymentService;
 import dk.dtu.pay.service.AppContext;
 
 import jakarta.ws.rs.*;
@@ -28,5 +29,27 @@ public class MerchantResource {
     public Response delete(@PathParam("id") String id) {
         AppContext.merchantService.deleteMerchant(id);
         return Response.noContent().build();
+    }
+    
+    @GET
+    @Path("/{id}/report")
+    public Response getMerchantReport(@PathParam("id") String merchantId) {
+        try {
+            return Response.ok(
+                    AppContext.paymentService
+                            .getPaymentsForMerchant(merchantId)
+                            .stream()
+                            .map(p -> new dk.dtu.pay.merchant.domain.model.MerchantPaymentReport(
+                                    p.amount,
+                                    p.token
+                            ))
+                            .toList()
+            ).build();
+
+        } catch (PaymentService.UnknownMerchantException e) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(e.getMessage())
+                    .build();
+        }
     }
 }

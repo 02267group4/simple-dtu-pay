@@ -35,9 +35,13 @@ public class PaymentService {
         this.bank = bank;
     }
 
+    
+    // Process a payment
+    
     public Payment pay(PaymentRequest request)
             throws UnknownCustomerException, UnknownMerchantException, BankFailureException {
 
+        // Validate token
         String customerId = tokens.consume(request.token);
         if (customerId == null) {
             throw new UnknownCustomerException("Invalid or already used token");
@@ -53,6 +57,7 @@ public class PaymentService {
             throw new UnknownMerchantException("merchant with id \"" + request.merchantId + "\" is unknown");
         }
 
+        // Call FastMoney bank system
         try {
             bank.transferMoneyFromTo(
                     c.getBankAccountId(),
@@ -64,27 +69,51 @@ public class PaymentService {
             throw new BankFailureException("Bank failed: " + e.getMessage());
         }
 
+        // Create payment object
         Payment payment = new Payment();
         payment.id = UUID.randomUUID().toString();
         payment.amount = request.amount;
         payment.customerId = customerId;
         payment.merchantId = request.merchantId;
+        payment.token = request.token;
 
         payments.add(payment);
         return payment;
     }
 
+     
+    // Get all payments
+     
     public List<Payment> getPayments() {
         return payments.all();
     }
+ 
+    // Get  payments for one merchant
+     
+    public List<Payment> getPaymentsForMerchant(String merchantId)
+            throws UnknownMerchantException {
 
-    // simple typed exceptions
+        Merchant m = merchants.get(merchantId);
+        if (m == null) {
+            throw new UnknownMerchantException(
+                    "merchant with id \"" + merchantId + "\" is unknown"
+            );
+        }
+
+        return payments.findByMerchant(merchantId);
+    }
+
+    
+    // Custom exceptions
+    
     public static class UnknownCustomerException extends Exception {
         public UnknownCustomerException(String msg) { super(msg); }
     }
+
     public static class UnknownMerchantException extends Exception {
         public UnknownMerchantException(String msg) { super(msg); }
     }
+
     public static class BankFailureException extends Exception {
         public BankFailureException(String msg) { super(msg); }
     }
