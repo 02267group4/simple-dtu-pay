@@ -1,4 +1,4 @@
-package dk.dtu.pay.service.domain.model;
+package dk.dtu.pay.payment.domain.model;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
@@ -10,6 +10,15 @@ public class Payment {
     public String merchantId;
     public String token;
 
+    public Status status;
+    public String failureReason;
+
     public Payment() {
+    }
+
+    public enum Status {
+        PENDING,
+        COMPLETED,
+        FAILED
     }
 }

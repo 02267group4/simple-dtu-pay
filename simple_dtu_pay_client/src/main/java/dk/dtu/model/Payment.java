@@ -9,6 +9,9 @@ public class Payment {
     public String customerId;
     public String merchantId;
 
+    public String status;        // "PENDING", "COMPLETED", "FAILED"
+    public String failureReason; // null if ok
+
     public Payment() {
     }
 }
