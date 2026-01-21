@@ -1,0 +1,15 @@
+// java
+package dk.dtu.pay;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import io.quarkus.runtime.StartupEvent;
+
+@ApplicationScoped
+public class MessagingStartup {
+
+    void onStart(@Observes StartupEvent ev) {
+        // Merchant Service currently has no RabbitMQ consumers to start
+        System.out.println("MessagingStartup (Merchant Service) onStart — No listeners to initialize.");
+    }
+}
