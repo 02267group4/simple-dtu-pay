@@ -39,11 +39,11 @@
         </dependency>
 
         <dependency>
-    <groupId>com.sun.xml.ws</groupId>
-    <artifactId>jaxws-ri</artifactId>
-    <version>4.0.3</version>
-    <type>pom</type>
-</dependency>
+            <groupId>com.sun.xml.ws</groupId>
+            <artifactId>jaxws-ri</artifactId>
+            <version>4.0.3</version>
+            <type>pom</type>
+        </dependency>
 
         <!-- JUnit (required by older Cucumber JUnit integration) -->
         <dependency>
