@@ -24,9 +24,9 @@ public class RabbitMQPaymentRequestedPublisher {
             factory.setHost(System.getenv().getOrDefault("RABBIT_HOST", "localhost"));
 
             try (Connection connection = factory.newConnection();
-                 Channel channel = connection.createChannel()) {
+                    Channel channel = connection.createChannel()) {
 
-                channel.exchangeDeclare(EXCHANGE, "topic");
+                channel.exchangeDeclare(EXCHANGE, "topic", true);
 
                 PaymentRequested event = new PaymentRequested(paymentId, token);
 
@@ -39,8 +39,7 @@ public class RabbitMQPaymentRequestedPublisher {
                         EXCHANGE,
                         ROUTING_KEY,
                         null,
-                        body
-                );
+                        body);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

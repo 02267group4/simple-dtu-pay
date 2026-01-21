@@ -1,5 +1,6 @@
 package dk.dtu.pay.token.application.port.out;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface TokenRepositoryPort {
@@ -10,4 +11,7 @@ public interface TokenRepositoryPort {
     Optional<String> consume(String token);
 
     boolean contains(String token);
+
+    // list all tokens owned by a customer
+    List<String> findByCustomerId(String customerId);
 }

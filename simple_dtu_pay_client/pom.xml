@@ -39,11 +39,11 @@
         </dependency>
 
         <dependency>
-    <groupId>com.sun.xml.ws</groupId>
-    <artifactId>jaxws-ri</artifactId>
-    <version>4.0.3</version>
-    <type>pom</type>
-</dependency>
+            <groupId>com.sun.xml.ws</groupId>
+            <artifactId>jaxws-ri</artifactId>
+            <version>4.0.3</version>
+            <type>pom</type>
+        </dependency>
 
         <!-- JUnit (required by older Cucumber JUnit integration) -->
         <dependency>
@@ -113,13 +113,17 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
-                    <includes>
-                        <include>**/*Test.java</include>
-                        <include>**/*Tests.java</include>
-                        <include>**/Test*.java</include>
-                        <include>**/*StepDefinitions.java</include>
-                    </includes>
-                </configuration>
+    <!-- Fix for "LogManager accessed before..." error -->
+    <systemPropertyVariables>
+        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+    </systemPropertyVariables>
+    <includes>
+        <include>**/*Test.java</include>
+        <include>**/*Tests.java</include>
+        <include>**/Test*.java</include>
+        <include>**/*StepDefinitions.java</include>
+    </includes>
+</configuration>
             </plugin>
         </plugins>
     </build>

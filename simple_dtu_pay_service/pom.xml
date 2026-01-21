@@ -23,6 +23,37 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
+
+
+        <dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-messaging-rabbitmq</artifactId>
+</dependency>
+
+        <dependency>
+  <groupId>io.quarkus</groupId>
+  <artifactId>quarkus-messaging</artifactId>
+</dependency>
+
+ <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>smallrye-reactive-messaging-in-memory</artifactId>
+        </dependency>
+
+        <dependency>
+    <groupId>com.sun.xml.ws</groupId>
+    <artifactId>jaxws-ri</artifactId>
+    <version>4.0.3</version>
+    <type>pom</type>
+</dependency>
+
+        <!-- JAXB support til XML (til senere opgaver med SOAP/XML) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-jaxb</artifactId>
+        </dependency>
+
+        <!-- Dependency Injection (trækkes normalt ind automatisk) -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>

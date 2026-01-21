@@ -6,11 +6,16 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import dk.dtu.pay.payment.domain.service.PaymentService;
+<<<<<<<< HEAD:payment_service/src/main/java/dk/dtu/pay/payment/adapter/in/messaging/RabbitMQTokenResultConsumer.java
 
 // ONLY these two local imports for the DTOs:
 import dk.dtu.pay.payment.adapter.in.messaging.dto.TokenRejected;
 import dk.dtu.pay.payment.adapter.in.messaging.dto.TokenValidated;
 
+========
+import dk.dtu.pay.token.adapter.out.messaging.dto.TokenValidationRejected;
+import dk.dtu.pay.token.adapter.out.messaging.dto.TokenValidationValidated;
+>>>>>>>> token-hexa:payment_service/src/main/java/dk/dtu/pay/payment/adapter/in/messaging/RabbitMQTokenValidationResultConsumer.java
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -18,7 +23,7 @@ import jakarta.inject.Inject;
 import java.nio.charset.StandardCharsets;
 
 @ApplicationScoped
-public class RabbitMQTokenResultConsumer {
+public class RabbitMQTokenValidationResultConsumer {
 
     private static final String EXCHANGE = "dtu.pay";
     private static final String VALIDATED_KEY = "token.validated";
@@ -29,7 +34,7 @@ public class RabbitMQTokenResultConsumer {
     private final PaymentService paymentService;
 
     @Inject
-    public RabbitMQTokenResultConsumer(PaymentService paymentService) {
+    public RabbitMQTokenValidationResultConsumer(PaymentService paymentService) {
         this.paymentService = paymentService;
     }
 
@@ -56,7 +61,7 @@ public class RabbitMQTokenResultConsumer {
 
             System.out.println("RabbitMQTokenResultConsumer connected to RabbitMQ");
 
-            channel.exchangeDeclare(EXCHANGE, "topic");
+            channel.exchangeDeclare(EXCHANGE, "topic", true);
 
             String qValidated = channel.queueDeclare().getQueue();
             channel.queueBind(qValidated, EXCHANGE, VALIDATED_KEY);
@@ -70,9 +75,10 @@ public class RabbitMQTokenResultConsumer {
                 String raw = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 System.out.println("TokenValidated raw body: " + raw);
 
-                TokenValidated ev = mapper.readValue(delivery.getBody(), TokenValidated.class);
+                TokenValidationValidated ev = mapper.readValue(delivery.getBody(), TokenValidationValidated.class);
                 paymentService.completePaymentForValidatedToken(ev.paymentId(), ev.customerId());
-            }, consumerTag -> {});
+            }, consumerTag -> {
+            });
 
             channel.basicConsume(qRejected, true, (tag, delivery) -> {
                 System.out.println("TokenRejected handler — this@" + System.identityHashCode(this));
@@ -80,9 +86,10 @@ public class RabbitMQTokenResultConsumer {
                 String raw = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 System.out.println("TokenRejected raw body: " + raw);
 
-                TokenRejected ev = mapper.readValue(delivery.getBody(), TokenRejected.class);
+                TokenValidationRejected ev = mapper.readValue(delivery.getBody(), TokenValidationRejected.class);
                 paymentService.failPayment(ev.paymentId(), ev.reason());
-            }, consumerTag -> {});
+            }, consumerTag -> {
+            });
 
         } catch (Exception e) {
             System.err.println("RabbitMQTokenResultConsumer failed to start:");
