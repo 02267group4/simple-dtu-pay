@@ -7,6 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class InMemoryPaymentRepository implements PaymentRepositoryPort {
@@ -31,5 +32,12 @@ public class InMemoryPaymentRepository implements PaymentRepositoryPort {
     @Override
     public void update(Payment p) {
         byId.put(p.id, p);
+    }
+    
+    @Override
+    public List<Payment> findByMerchant(String merchantId) {
+        return byId.values().stream()
+                .filter(p -> p.merchantId.equals(merchantId))
+                .collect(Collectors.toList());
     }
 }

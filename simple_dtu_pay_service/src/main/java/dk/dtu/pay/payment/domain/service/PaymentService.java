@@ -58,6 +58,22 @@ public class PaymentService {
     public List<Payment> getPayments() {
         return payments.all();
     }
+    
+    // 🔹 NEW: merchant-specific reporting
+    public List<Payment> getPaymentsForMerchant(String merchantId)
+            throws UnknownMerchantException {
+
+        // Optional safety: check merchant exists
+        if (merchants.get(merchantId) == null) {
+            throw new UnknownMerchantException(
+                    "merchant with id \"" + merchantId + "\" is unknown"
+            );
+        }
+
+        // Delegate to the payment repository
+        return payments.findByMerchant(merchantId);
+    }
+
 
     public static class UnknownMerchantException extends Exception {
         public UnknownMerchantException(String msg) { super(msg); }
