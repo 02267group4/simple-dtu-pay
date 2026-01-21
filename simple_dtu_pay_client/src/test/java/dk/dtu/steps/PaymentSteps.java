@@ -1,3 +1,4 @@
+// java
 package dk.dtu.steps;
 
 import dk.dtu.model.Customer;
@@ -17,14 +18,18 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class PaymentSteps {
+    // Update these URIs to match your new service ports
+    private String customerServiceUri = "http://localhost:8081";
+    private String merchantServiceUri = "http://localhost:8082";
+    private String paymentServiceUri = "http://localhost:8083";
+    private String tokenServiceUri = "http://localhost:8084";
+
+    // Ensure the rest of the code uses these specific URIs for their respective calls
 
     private static final String BANK_API_KEY = System.getenv("BANK_API_KEY");
 
     private final SimpleDTUPay dtuPay = new SimpleDTUPay();
     private final BankService bank = new BankService_Service().getBankServicePort();
-
-    private String customerId;
-    private String merchantId;
 
     private String customerBankId;
     private String merchantBankId;
@@ -47,7 +52,7 @@ public class PaymentSteps {
         accountsToRetire.add(customerBankId);
 
         Customer c = new Customer(name, cpr, customerBankId);
-        customerId = dtuPay.register(c);
+        TestContext.customerId = dtuPay.register(c);
     }
 
     @Given("a merchant with name {string}, CPR {string}, and balance {int}")
@@ -61,12 +66,12 @@ public class PaymentSteps {
         accountsToRetire.add(merchantBankId);
 
         Merchant m = new Merchant(name, cpr, merchantBankId);
-        merchantId = dtuPay.register(m);
+        TestContext.merchantId = dtuPay.register(m);
     }
 
     @Given("the customer has a valid token")
     public void customerHasValidToken() {
-        customerToken = dtuPay.requestToken(customerId);
+        customerToken = dtuPay.requestToken(TestContext.customerId);
 
         assertNotNull("Token must not be null", customerToken);
         assertFalse("Token must not be empty", customerToken.isBlank());
@@ -74,16 +79,30 @@ public class PaymentSteps {
 
     @When("the merchant initiates a payment for {int} kr by the customer using the token")
     public void makePayment(int amount) {
-        paymentId = dtuPay.payAsync(customerToken, merchantId, amount, paymentDescription);
+        paymentId = dtuPay.payAsync(customerToken, TestContext.merchantId, amount, paymentDescription);
         assertNotNull("paymentId must not be null", paymentId);
 
-        // async: wait for completion
         paymentSuccess = dtuPay.waitForPaymentCompleted(paymentId, 5000);
+    }
+
+    @When("the merchant initiates a payment for {int} kr by the customer without a token")
+    public void makePaymentWithoutToken(int amount) {
+        try {
+            paymentId = dtuPay.payAsync(null, TestContext.merchantId, amount, paymentDescription);
+            paymentSuccess = dtuPay.waitForPaymentCompleted(paymentId, 3000);
+        } catch (Exception e) {
+            paymentSuccess = false;
+        }
     }
 
     @Then("the payment is successful")
     public void verifySuccess() {
         assertTrue("Payment should be successful", paymentSuccess);
+    }
+
+    @Then("the payment is rejected")
+    public void verifyRejected() {
+        assertFalse("Payment should be rejected", paymentSuccess);
     }
 
     @Then("the balance of the customer at the bank is {int} kr")
@@ -98,26 +117,10 @@ public class PaymentSteps {
         assertEquals(BigDecimal.valueOf(expectedBalance), account.getBalance());
     }
 
-    @When("the merchant initiates a payment for {int} kr by the customer without a token")
-    public void makePaymentWithoutToken(int amount) {
-        try {
-            // token missing -> should end up FAILED
-            paymentId = dtuPay.payAsync(null, merchantId, amount, paymentDescription);
-            paymentSuccess = dtuPay.waitForPaymentCompleted(paymentId, 3000);
-        } catch (Exception e) {
-            paymentSuccess = false;
-        }
-    }
-
-    @Then("the payment is rejected")
-    public void verifyRejected() {
-        assertFalse("Payment should be rejected", paymentSuccess);
-    }
-
     @After
     public void cleanup() {
-        if (customerId != null) dtuPay.unregisterCustomer(customerId);
-        if (merchantId != null) dtuPay.unregisterMerchant(merchantId);
+        if (TestContext.customerId != null) dtuPay.unregisterCustomer(TestContext.customerId);
+        if (TestContext.merchantId != null) dtuPay.unregisterMerchant(TestContext.merchantId);
 
         for (String accId : accountsToRetire) {
             try {
@@ -126,5 +129,9 @@ public class PaymentSteps {
                 System.err.println("Failed to retire bank account: " + accId);
             }
         }
+
+        TestContext.customerId = null;
+        TestContext.merchantId = null;
+        TestContext.requestId = null;
     }
 }

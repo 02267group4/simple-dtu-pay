@@ -1,13 +1,14 @@
-To run the Quarkus server:
+To run docker:
+cd simple_dtu_pay_service 
+mvn package -DskipTests
+cd ..
+docker compose down -v #in case there are old containers
+docker compose up -d --build
 
-cd simple_dtu_pay_service
+set environment variable BANK_API_KEY to "eagle0192"
+windows: $env:BANK_API_KEY="eagle0192"
+Linux: export BANK_API_KEY="eagle0192"
 
-./mvnw quarkus:dev
-
-To run tests on client
-
+for testing:
 cd simple_dtu_pay_client
-
-export BANK_API_KEY="eagle0192"
-mvn test
-
+mvn clean test

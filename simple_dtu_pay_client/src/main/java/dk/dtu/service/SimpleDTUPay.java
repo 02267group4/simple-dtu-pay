@@ -127,6 +127,13 @@ public class SimpleDTUPay {
         }
     }
 
+    public List<Payment> getManagerReport() {
+        return target.path("manager/reports")
+                .request(MediaType.APPLICATION_JSON)
+                .get(new GenericType<List<Payment>>() {
+                });
+    }
+
     public void close() {
         client.close();
     }
