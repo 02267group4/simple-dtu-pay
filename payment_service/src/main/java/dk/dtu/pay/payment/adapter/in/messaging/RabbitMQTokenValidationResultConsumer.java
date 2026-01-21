@@ -6,16 +6,8 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import dk.dtu.pay.payment.domain.service.PaymentService;
-<<<<<<<< HEAD:payment_service/src/main/java/dk/dtu/pay/payment/adapter/in/messaging/RabbitMQTokenResultConsumer.java
-
-// ONLY these two local imports for the DTOs:
 import dk.dtu.pay.payment.adapter.in.messaging.dto.TokenRejected;
 import dk.dtu.pay.payment.adapter.in.messaging.dto.TokenValidated;
-
-========
-import dk.dtu.pay.token.adapter.out.messaging.dto.TokenValidationRejected;
-import dk.dtu.pay.token.adapter.out.messaging.dto.TokenValidationValidated;
->>>>>>>> token-hexa:payment_service/src/main/java/dk/dtu/pay/payment/adapter/in/messaging/RabbitMQTokenValidationResultConsumer.java
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -75,7 +67,7 @@ public class RabbitMQTokenValidationResultConsumer {
                 String raw = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 System.out.println("TokenValidated raw body: " + raw);
 
-                TokenValidationValidated ev = mapper.readValue(delivery.getBody(), TokenValidationValidated.class);
+                TokenValidated ev = mapper.readValue(delivery.getBody(), TokenValidated.class);
                 paymentService.completePaymentForValidatedToken(ev.paymentId(), ev.customerId());
             }, consumerTag -> {
             });
@@ -86,7 +78,7 @@ public class RabbitMQTokenValidationResultConsumer {
                 String raw = new String(delivery.getBody(), StandardCharsets.UTF_8);
                 System.out.println("TokenRejected raw body: " + raw);
 
-                TokenValidationRejected ev = mapper.readValue(delivery.getBody(), TokenValidationRejected.class);
+                TokenRejected ev = mapper.readValue(delivery.getBody(), TokenRejected.class);
                 paymentService.failPayment(ev.paymentId(), ev.reason());
             }, consumerTag -> {
             });

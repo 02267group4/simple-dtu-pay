@@ -4,15 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-<<<<<<< HEAD:token_service/src/main/java/dk/dtu/pay/token/adapter/in/messaging/RabbitMQPaymentRequestedConsumer.java
-// UPDATED: Now importing from the local dto package within token_service
+
 import dk.dtu.pay.token.adapter.in.messaging.dto.PaymentRequested;
-import dk.dtu.pay.token.adapter.out.messaging.RabbitMQTokenResultPublisher;
-=======
-import dk.dtu.pay.payment.adapter.out.messaging.dto.PaymentRequested;
 import dk.dtu.pay.token.adapter.out.messaging.RabbitMQTokenValidationResultPublisher;
->>>>>>> token-hexa:simple_dtu_pay_service/src/main/java/dk/dtu/pay/token/adapter/in/messaging/RabbitMQPaymentRequestedConsumer.java
 import dk.dtu.pay.token.domain.service.TokenService;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -40,11 +36,8 @@ public class RabbitMQPaymentRequestedConsumer {
     void init() {
         System.out.println("RabbitMQPaymentRequestedConsumer @PostConstruct publisher=" +
                 (publisher == null ? "NULL" : "OK") + " this@" + System.identityHashCode(this));
-<<<<<<< HEAD:token_service/src/main/java/dk/dtu/pay/token/adapter/in/messaging/RabbitMQPaymentRequestedConsumer.java
-=======
         // Do NOT start the thread here; startup bean will explicitly call
         // startListening()
->>>>>>> token-hexa:simple_dtu_pay_service/src/main/java/dk/dtu/pay/token/adapter/in/messaging/RabbitMQPaymentRequestedConsumer.java
     }
 
     public void startListening() {

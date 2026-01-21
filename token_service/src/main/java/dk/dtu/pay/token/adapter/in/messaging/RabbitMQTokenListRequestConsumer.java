@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import dk.dtu.pay.customer.adapter.out.messaging.dto.TokenListRequested;
 import dk.dtu.pay.token.adapter.out.messaging.RabbitMQTokenListResultPublisher;
 import dk.dtu.pay.token.domain.service.TokenService;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import dk.dtu.pay.token.adapter.in.messaging.dto.TokenListRequested;
+
 
 import java.nio.charset.StandardCharsets;
 

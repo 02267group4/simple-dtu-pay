@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import dk.dtu.pay.customer.adapter.out.messaging.dto.TokenIssueRequested;
 import dk.dtu.pay.token.adapter.out.messaging.RabbitMQTokenIssueResultPublisher;
 import dk.dtu.pay.token.domain.service.TokenService;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import dk.dtu.pay.token.adapter.in.messaging.dto.TokenIssueRequested;
+
 
 import java.nio.charset.StandardCharsets;
 
@@ -61,7 +62,7 @@ public class RabbitMQTokenIssueRequestConsumer {
 
             channel.basicConsume(queue, true, (tag, delivery) -> {
                 String raw = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                System.out.println("TokenIssueRequested raw body: " + raw);
+                System.out.println("TokenIssueRequested.java raw body: " + raw);
 
                 TokenIssueRequested ev = mapper.readValue(delivery.getBody(), TokenIssueRequested.class);
                 try {

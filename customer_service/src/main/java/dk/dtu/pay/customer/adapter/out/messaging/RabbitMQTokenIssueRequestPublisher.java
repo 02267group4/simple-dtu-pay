@@ -30,7 +30,7 @@ public class RabbitMQTokenIssueRequestPublisher {
                 TokenIssueRequested payload = new TokenIssueRequested(requestId, customerId, count);
                 byte[] body = mapper.writeValueAsBytes(payload);
 
-                System.out.println("Publishing TokenIssueRequested payload: " + new String(body, StandardCharsets.UTF_8));
+                System.out.println("Publishing TokenIssueRequested.java payload: " + new String(body, StandardCharsets.UTF_8));
 
                 channel.basicPublish(EXCHANGE, ROUTING_KEY, null, body);
             }

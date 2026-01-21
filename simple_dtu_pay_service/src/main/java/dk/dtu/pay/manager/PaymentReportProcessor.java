@@ -1,4 +1,4 @@
-package dk.dtu.pay.payment.adapter.in.messaging;
+package dk.dtu.pay.manager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dtu.pay.manager.domain.model.ManagerReportEvents.*;
