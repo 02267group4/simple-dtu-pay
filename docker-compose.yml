@@ -10,14 +10,59 @@ services:
       timeout: 5s
       retries: 20
 
-  dtu-pay:
+  customer-service:
     build:
-      context: ./simple_dtu_pay_service
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: customer_service
     ports:
-      - "8080:8080"
+      - "8081:8081"
     environment:
-      RABBIT_HOST: rabbitmq
-      BANK_API_KEY: eagle0192
+      - QUARKUS_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  merchant-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: merchant_service
+    ports:
+      - "8082:8082"
+    environment:
+      - QUARKUS_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: payment_service
+    ports:
+      - "8083:8083"
+    environment:
+      - QUARKUS_RABBITMQ_HOST=rabbitmq
+      - BANK_API_KEY=${BANK_API_KEY}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  token-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: token_service
+    ports:
+      - "8084:8084"
+    environment:
+      - QUARKUS_RABBITMQ_HOST=rabbitmq
     depends_on:
       rabbitmq:
         condition: service_healthy

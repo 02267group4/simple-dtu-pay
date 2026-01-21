@@ -17,6 +17,13 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class PaymentSteps {
+    // Update these URIs to match your new service ports
+    private String customerServiceUri = "http://localhost:8081";
+    private String merchantServiceUri = "http://localhost:8082";
+    private String paymentServiceUri = "http://localhost:8083";
+    private String tokenServiceUri = "http://localhost:8084";
+
+    // Ensure the rest of the code uses these specific URIs for their respective calls
 
     private static final String BANK_API_KEY = System.getenv("BANK_API_KEY");
 
