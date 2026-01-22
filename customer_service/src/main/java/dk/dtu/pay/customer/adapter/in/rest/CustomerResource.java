@@ -7,6 +7,8 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import dk.dtu.pay.customer.adapter.out.request.RequestStore;
+import java.util.HashMap;
+import java.util.List;
 
 import java.util.Map;
 import java.util.UUID;
@@ -45,10 +47,12 @@ public class CustomerResource {
 
         // validation failure → async rejection
         if (count < 1 || count > 5) {
-            requestStore.complete(requestId, Map.of(
-                    "tokens", null,
-                    "error", "Requested token count must be between 1 and 5"
-            ));
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("tokens", List.of()); // must NOT be null
+            result.put("error", "Requested token count must be between 1 and 5");
+
+            requestStore.complete(requestId, result);
 
             return Response.status(Response.Status.ACCEPTED)
                     .entity(Map.of("requestId", requestId))
@@ -63,10 +67,12 @@ public class CustomerResource {
                     .build();
 
         } catch (CustomerService.UnknownCustomerException e) {
-            requestStore.complete(requestId, Map.of(
-                    "tokens", null,
-                    "error", e.getMessage()
-            ));
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("tokens", List.of()); // never null
+            result.put("error", e.getMessage());
+
+            requestStore.complete(requestId, result);
 
             return Response.status(Response.Status.ACCEPTED)
                     .entity(Map.of("requestId", requestId))
