@@ -19,12 +19,14 @@ public class SimpleDTUPay {
     private static final String MERCHANT_SERVICE_URL = "http://localhost:8082";
     private static final String PAYMENT_SERVICE_URL = "http://localhost:8083";
     private static final String TOKEN_SERVICE_URL = "http://localhost:8084";
+    private static final String MANAGER_SERVICE_URL = "http://localhost:8085";
 
     private final Client client = ClientBuilder.newClient();
     private final WebTarget customerTarget = client.target(CUSTOMER_SERVICE_URL);
     private final WebTarget merchantTarget = client.target(MERCHANT_SERVICE_URL);
     private final WebTarget paymentTarget = client.target(PAYMENT_SERVICE_URL);
     private final WebTarget tokenTarget = client.target(TOKEN_SERVICE_URL);
+    private final WebTarget managerTarget = client.target(MANAGER_SERVICE_URL);
 
     public String register(Customer customer) {
         try (Response response = customerTarget.path("customers")
@@ -136,7 +138,7 @@ public class SimpleDTUPay {
     }
 
     public List<Payment> getManagerReport() {
-        return paymentTarget.path("manager/reports")
+        return managerTarget.path("manager/reports")
                 .request(MediaType.APPLICATION_JSON)
                 .get(new GenericType<List<Payment>>() {
                 });
