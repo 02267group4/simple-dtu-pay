@@ -15,6 +15,7 @@
         <module>merchant_service</module>
         <module>payment_service</module>
         <module>token_service</module>
+        <module>manager_service</module>
     </modules>
 
     <properties>

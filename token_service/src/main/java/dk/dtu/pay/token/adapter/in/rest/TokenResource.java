@@ -28,7 +28,7 @@ public class TokenResource {
                     .build();
         }
 
-        String token = tokenService.issueToken(req.customerId);
+        String token = tokenService.issueToken(req.customerId, req.bankAccountId);
         return Response.status(Response.Status.CREATED)
                 .entity(new Token(token))
                 .build();

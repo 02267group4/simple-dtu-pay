@@ -11,6 +11,7 @@ COPY customer_service ./customer_service
 COPY merchant_service ./merchant_service
 COPY payment_service ./payment_service
 COPY token_service ./token_service
+COPY manager_service ./manager_service
 COPY simple_dtu_pay_client ./simple_dtu_pay_client
 
 # Build the specific service
