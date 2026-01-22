@@ -56,7 +56,8 @@ public class TokenService {
     }
 
     public List<String> listTokensForCustomer(String customerId) {
-        return tokenRepo.findByCustomerId(customerId);
+        List<String> tokens = tokenRepo.findByCustomerId(customerId);
+        return tokens == null ? List.of() : tokens;
     }
 
     public static class InvalidTokenException extends Exception {
@@ -64,4 +65,5 @@ public class TokenService {
             super(msg);
         }
     }
+
 }

@@ -8,6 +8,7 @@ import dk.dtu.pay.token.adapter.out.messaging.dto.TokenListResult;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;   // ✅ REQUIRED
 
 @ApplicationScoped
 public class RabbitMQTokenListResultPublisher {
@@ -17,8 +18,8 @@ public class RabbitMQTokenListResultPublisher {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public void publish(String requestId, java.util.List<String> tokens) {
-        publishResult(new TokenListResult(requestId, tokens));
+    public void publish(String requestId, boolean success, String error, List<String> tokens) {
+        publishResult(new TokenListResult(requestId, success, error, tokens));
     }
 
     private void publishResult(Object payload) {
@@ -32,7 +33,10 @@ public class RabbitMQTokenListResultPublisher {
                 channel.exchangeDeclare(EXCHANGE, "topic", true);
                 byte[] body = mapper.writeValueAsBytes(payload);
 
-                System.out.println("Publishing TokenListResult payload: " + new String(body, StandardCharsets.UTF_8));
+                System.out.println(
+                        "Publishing TokenListResult payload: " +
+                                new String(body, StandardCharsets.UTF_8)
+                );
 
                 channel.basicPublish(EXCHANGE, RESULT_KEY, null, body);
             }

@@ -4,15 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import dk.dtu.pay.token.adapter.in.messaging.dto.TokenIssueRequested;
 import dk.dtu.pay.token.adapter.out.messaging.RabbitMQTokenIssueResultPublisher;
 import dk.dtu.pay.token.domain.service.TokenService;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import dk.dtu.pay.token.adapter.in.messaging.dto.TokenIssueRequested;
-
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @ApplicationScoped
 public class RabbitMQTokenIssueRequestConsumer {
@@ -35,8 +35,7 @@ public class RabbitMQTokenIssueRequestConsumer {
     void init() {
         System.out.println("RabbitMQTokenIssueRequestConsumer @PostConstruct publisher=" +
                 (publisher == null ? "NULL" : "OK") + " this@" + System.identityHashCode(this));
-        // start the consumer thread on startup
-        // startListening();
+        // startListening is invoked by MessagingStartup
     }
 
     public void startListening() {
@@ -62,14 +61,17 @@ public class RabbitMQTokenIssueRequestConsumer {
 
             channel.basicConsume(queue, true, (tag, delivery) -> {
                 String raw = new String(delivery.getBody(), StandardCharsets.UTF_8);
-                System.out.println("TokenIssueRequested.java raw body: " + raw);
+                System.out.println("TokenIssueRequest raw body: " + raw);
 
                 TokenIssueRequested ev = mapper.readValue(delivery.getBody(), TokenIssueRequested.class);
                 try {
-                    java.util.List<String> tokens = tokenService.issueTokens(ev.customerId(), ev.bankAccountId(), ev.count());
-                    publisher.publishValidated(ev.requestId(), tokens);
+                    List<String> tokens = tokenService.issueTokens(ev.customerId(), ev.bankAccountId(), ev.count());
+                    // success -> publish explicit envelope with success=true, error=null, tokens=list
+                    publisher.publish(ev.requestId(), true, null, tokens);
                 } catch (Exception e) {
-                    publisher.publishRejected(ev.requestId(), e.getMessage());
+                    System.err.println("Token issue failed for requestId=" + ev.requestId() + ": " + e.getMessage());
+                    // failure -> publish explicit envelope with success=false, error=message, tokens=[]
+                    publisher.publish(ev.requestId(), false, e.getMessage(), java.util.List.of());
                 }
             }, consumerTag -> {
             });
