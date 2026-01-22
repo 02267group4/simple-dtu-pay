@@ -12,8 +12,8 @@ import java.util.Map;
 
 public class CustomerClient {
 
-    // Base URL of the running DTU Pay backend (black-box from test perspective)
-    private static final String BASE_URL = "http://localhost:8080";
+    // Base URL of the customer service microservice
+    private static final String BASE_URL = "http://localhost:8081";
 
     // JAX-RS client used for all HTTP interactions
     private final Client client = ClientBuilder.newClient();

@@ -6,21 +6,12 @@ pipeline {
     }
 
     stages {
-        stage('Build Service') {
+        stage('Start Services') {
             steps {
-                dir('simple_dtu_pay_service') {
-                    sh 'chmod +x mvnw'
-                    sh './mvnw clean package -DskipTests'
-                    sh 'docker build -t simple-dtu-pay-service .'
-                }
-            }
-        }
-
-        stage('Start Service') {
-            steps {
-                sh 'docker rm -f simple-dtu-pay || true'
-                sh 'docker run -d --name simple-dtu-pay -p 8080:8080 simple-dtu-pay-service'
-                sleep 5
+                sh 'docker-compose down --remove-orphans || true'
+                sh 'docker-compose up -d --build'
+                // Wait for services to be ready
+                sh 'sleep 30'
             }
         }
 
@@ -35,7 +26,7 @@ pipeline {
 
     post {
         always {
-            sh 'docker rm -f simple-dtu-pay || true'
+            sh 'docker-compose down --remove-orphans || true'
             cleanWs()
         }
     }

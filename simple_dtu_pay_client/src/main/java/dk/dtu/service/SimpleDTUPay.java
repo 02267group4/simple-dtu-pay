@@ -14,12 +14,20 @@ import java.util.List;
 
 public class SimpleDTUPay {
 
-    private static final String BASE_URL = "http://localhost:8080";
+    // Microservice endpoints
+    private static final String CUSTOMER_SERVICE_URL = "http://localhost:8081";
+    private static final String MERCHANT_SERVICE_URL = "http://localhost:8082";
+    private static final String PAYMENT_SERVICE_URL = "http://localhost:8083";
+    private static final String TOKEN_SERVICE_URL = "http://localhost:8084";
+
     private final Client client = ClientBuilder.newClient();
-    private final WebTarget target = client.target(BASE_URL);
+    private final WebTarget customerTarget = client.target(CUSTOMER_SERVICE_URL);
+    private final WebTarget merchantTarget = client.target(MERCHANT_SERVICE_URL);
+    private final WebTarget paymentTarget = client.target(PAYMENT_SERVICE_URL);
+    private final WebTarget tokenTarget = client.target(TOKEN_SERVICE_URL);
 
     public String register(Customer customer) {
-        try (Response response = target.path("customers")
+        try (Response response = customerTarget.path("customers")
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(customer, MediaType.APPLICATION_JSON))) {
 
@@ -30,7 +38,7 @@ public class SimpleDTUPay {
     }
 
     public String register(Merchant merchant) {
-        try (Response response = target.path("merchants")
+        try (Response response = merchantTarget.path("merchants")
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(merchant, MediaType.APPLICATION_JSON))) {
 
@@ -43,7 +51,7 @@ public class SimpleDTUPay {
     public String requestToken(String customerId) {
         TokenRequest req = new TokenRequest(customerId);
 
-        try (Response response = target.path("tokens")
+        try (Response response = tokenTarget.path("tokens")
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(req, MediaType.APPLICATION_JSON))) {
 
@@ -58,12 +66,12 @@ public class SimpleDTUPay {
         }
     }
 
-    // NEW: async payment initiation
+    // Async payment initiation
     // returns paymentId (or throws)
     public String payAsync(String token, String merchantId, int amount, String description) {
         PaymentRequest req = new PaymentRequest(token, merchantId, amount, description);
 
-        try (Response response = target.path("payments")
+        try (Response response = paymentTarget.path("payments")
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(req, MediaType.APPLICATION_JSON))) {
 
@@ -80,7 +88,7 @@ public class SimpleDTUPay {
         }
     }
 
-    // NEW: poll until COMPLETED or FAILED, true if COMPLETED
+    // Poll until COMPLETED or FAILED, true if COMPLETED
     public boolean waitForPaymentCompleted(String paymentId, long timeoutMs) {
         long deadline = System.currentTimeMillis() + timeoutMs;
 
@@ -110,25 +118,25 @@ public class SimpleDTUPay {
     }
 
     public List<Payment> getPayments() {
-        return target.path("payments")
+        return paymentTarget.path("payments")
                 .request(MediaType.APPLICATION_JSON)
                 .get(new GenericType<List<Payment>>() {});
     }
 
     public void unregisterCustomer(String id) {
-        try (Response r = target.path("customers/" + id).request().delete()) {
+        try (Response r = customerTarget.path("customers/" + id).request().delete()) {
             r.getStatus();
         }
     }
 
     public void unregisterMerchant(String id) {
-        try (Response r = target.path("merchants/" + id).request().delete()) {
+        try (Response r = merchantTarget.path("merchants/" + id).request().delete()) {
             r.getStatus();
         }
     }
 
     public List<Payment> getManagerReport() {
-        return target.path("manager/reports")
+        return paymentTarget.path("manager/reports")
                 .request(MediaType.APPLICATION_JSON)
                 .get(new GenericType<List<Payment>>() {
                 });

@@ -17,7 +17,8 @@ import static org.junit.Assert.*;
 
 public class TokenSteps {
 
-    private static final String BASE_URL = "http://localhost:8080";
+    private static final String CUSTOMER_SERVICE_URL = "http://localhost:8081";
+    private static final String TOKEN_SERVICE_URL = "http://localhost:8084";
 
     private final CustomerClient customerClient = new CustomerClient();
     private String requestId;
@@ -44,7 +45,7 @@ public class TokenSteps {
         assertNotNull("customerId must be set by Given step", TestContext.customerId);
 
         Client client = ClientBuilder.newClient();
-        try (Response resp = client.target(BASE_URL)
+        try (Response resp = client.target(TOKEN_SERVICE_URL)
                 .path("tokens")
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(Map.of("customerId", TestContext.customerId), MediaType.APPLICATION_JSON))) {
