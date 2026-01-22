@@ -1,3 +1,4 @@
+// java
 package dk.dtu.steps;
 
 import dk.dtu.service.CustomerClient;
@@ -7,78 +8,136 @@ import io.cucumber.java.en.When;
 
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.*;
 
 public class TokenSteps {
 
-    private static final String BASE_URL = "http://localhost:8080";
+    private static final String GATEWAY_BASE = "http://localhost:8080";
+    // Poll the customer service request endpoint (RequestStore lives in customer service)
+    private static final String TOKEN_SERVICE_BASE = "http://localhost:8081";
 
     private final CustomerClient customerClient = new CustomerClient();
-    private String requestId;
-    private String createdToken;
+    private final Client client = ClientBuilder.newClient();
+
+    // state tracked between When/Then steps
+    private String lastRequestId;
+    private boolean lastRequestRejected;
+    private List<String> lastTokenList;
 
     @When("the customer requests {int} tokens")
     public void theCustomerRequestsTokens(int count) {
-        assertNotNull("customerId must be set by Given step", TestContext.customerId);
-        requestId = customerClient.requestTokens(TestContext.customerId, count);
-        assertNotNull(requestId);
-        TestContext.requestId = requestId;
+        lastRequestRejected = false;
+        lastTokenList = null;
+        String reqId = customerClient.requestTokens(TestContext.customerId, count);
+        lastRequestId = reqId;
+        TestContext.requestId = reqId;
+    }
+
+    @When("the customer requests {int} token")
+    public void the_customer_requests_token(int count) {
+        theCustomerRequestsTokens(count);
     }
 
     @When("the customer requests their token list")
     public void theCustomerRequestsTheirTokenList() {
-        assertNotNull("customerId must be set by Given step", TestContext.customerId);
-        requestId = customerClient.requestTokenList(TestContext.customerId);
-        assertNotNull(requestId);
-        TestContext.requestId = requestId;
+        lastRequestRejected = false;
+
+        String reqId = customerClient.requestTokenList(TestContext.customerId);
+        lastRequestId = reqId;
+
+        Map<String, Object> result = pollRequestResult(reqId);
+        Object tokens = result.get("tokens");
+
+        assertNotNull("Expected tokens list, got null", tokens);
+        assertTrue("Expected tokens to be a List", tokens instanceof List);
+
+        @SuppressWarnings("unchecked")
+        List<String> list = (List<String>) tokens;
+        lastTokenList = list;
     }
 
-    @When("the test creates a token for the customer")
-    public void the_test_creates_a_token_for_the_customer() {
-        assertNotNull("customerId must be set by Given step", TestContext.customerId);
 
-        Client client = ClientBuilder.newClient();
-        try (Response resp = client.target(BASE_URL)
-                .path("tokens")
-                .request(MediaType.APPLICATION_JSON)
-                .post(Entity.entity(Map.of("customerId", TestContext.customerId), MediaType.APPLICATION_JSON))) {
+    private Map<String, Object> pollRequestResult(String requestId) {
+        long deadline = System.currentTimeMillis() + 20000; // wait up to 20s
+        while (System.currentTimeMillis() < deadline) {
+            try (Response r = client.target(TOKEN_SERVICE_BASE)
+                    .path("requests")
+                    .path(requestId)
+                    .request()
+                    .get()) {
 
-            if (resp.getStatus() != 201) {
-                throw new RuntimeException("Token creation failed: HTTP " + resp.getStatus());
+                int status = r.getStatus();
+                if (status == 202) {
+                    // still processing
+                } else if (status == 200) {
+                    // completed: body is { success, token, error } where tokens are either an empty or populated list
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> body = r.readEntity(Map.class);
+                    return body;
+                } else {
+                    // unexpected status -> treat as completed with a marker
+                    return Map.of("tokens", null);
+                }
+            } catch (Exception e) {
+                // swallow and retry until deadline
             }
-            @SuppressWarnings("unchecked")
-            Map<String, Object> body = resp.readEntity(Map.class);
-            Object t = body.get("token");
-            if (t != null) {
-                createdToken = t.toString();
+
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
             }
-        } finally {
-            client.close();
         }
-
-        assertNotNull("created token must not be null", createdToken);
+        fail("Timed out waiting for async request result for requestId=" + requestId);
+        return Map.of(); // unreachable
     }
 
-    @Then("the request is accepted")
+    @Then("the token request is rejected")
+    public void the_token_request_is_rejected() {
+        Map<String, Object> result = pollRequestResult(lastRequestId);
+
+        Object success = result.get("success");
+        assertNotNull("Expected success field", success);
+        assertEquals("Expected request to be rejected", false, success);
+
+        lastRequestRejected = true;
+    }
+
+
+    @Then("the token request is accepted")
     public void theRequestIsAccepted() {
-        assertNotNull(requestId);
+        Map<String, Object> result = pollRequestResult(lastRequestId);
+
+        Object success = result.get("success");
+        assertNotNull("Expected success field", success);
+        assertEquals("Expected request to be accepted", true, success);
+
+        Object tokens = result.get("tokens");
+        assertNotNull("Expected tokens list", tokens);
+        assertTrue("Expected tokens to be a List", tokens instanceof List);
+
+        @SuppressWarnings("unchecked")
+        List<String> list = (List<String>) tokens;
+        lastTokenList = list;
+        lastRequestRejected = false;
     }
 
-    @Then("a request id is returned")
-    public void aRequestIdIsReturned() {
-        assertNotNull(requestId);
+
+    @Then("{int} tokens are returned")
+    public void tokens_are_returned(int expectedCount) {
+        assertNotNull("No tokens available", lastTokenList);
+        assertEquals(expectedCount, lastTokenList.size());
     }
 
-    @Then("a token is returned")
-    public void a_token_is_returned() {
-        assertNotNull(createdToken);
-        assertFalse(createdToken.isBlank());
+    @Then("list of {int} tokens are returned")
+    public void list_of_tokens_are_returned(int expectedCount) {
+        tokens_are_returned(expectedCount);
     }
 
     @After
@@ -90,5 +149,8 @@ public class TokenSteps {
 
         TestContext.customerId = null;
         TestContext.requestId = null;
+        lastRequestId = null;
+        lastRequestRejected = false;
+        lastTokenList = null;
     }
 }

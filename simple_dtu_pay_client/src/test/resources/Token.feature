@@ -1,16 +1,26 @@
 Feature: Token
 
-  Scenario: Customer requests token issuance
-    Given a customer with name "Alice", CPR "111111-1111", and balance 1000
+  Scenario: Customer requests too many tokens at once
+    Given a customer with name "Alice", CPR "121314-1516", and balance 1000
+    When the customer requests 7 tokens
+    Then the token request is rejected
+
+
+  Scenario: Customer requests tokens in valid sequence and retrieves list
+    Given a customer with name "Bob", CPR "232425-2627", and balance 0
+    When the customer requests 1 token
+    Then the token request is accepted
     When the customer requests 3 tokens
-    Then a request id is returned
-
-  Scenario: Customer requests token list
-    Given a customer with name "Bob", CPR "222222-2222", and balance 0
+    Then the token request is accepted
     When the customer requests their token list
-    Then a request id is returned
+    Then list of 4 tokens are returned
 
-  Scenario: Token service issues a token
-    Given a customer with name "Charlie", CPR "333333-3333", and balance 0
-    When the test creates a token for the customer
-    Then a token is returned
+
+  Scenario: Customer cannot request more tokens when already holding tokens
+    Given a customer with name "Charlie", CPR "343536-3738", and balance 0
+    When the customer requests 2 tokens
+    Then the token request is accepted
+    When the customer requests 1 token
+    Then the token request is rejected
+    When the customer requests their token list
+    Then list of 2 tokens are returned

@@ -1,4 +1,4 @@
-package dk.dtu.pay.token.adapter.out.messaging.dto;
+package dk.dtu.pay.customer.adapter.in.messaging.dto;
 
 import java.util.List;
 
@@ -8,3 +8,4 @@ public record TokenListResult(
         String error,
         List<String> tokens
 ) {}
+
