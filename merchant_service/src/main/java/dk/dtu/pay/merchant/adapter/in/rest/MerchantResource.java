@@ -6,11 +6,11 @@ import dk.dtu.pay.merchant.domain.model.Merchant;
 import dk.dtu.pay.merchant.domain.model.MerchantReportEvents.MerchantReportRequest;
 import dk.dtu.pay.merchant.domain.model.MerchantReportEvents.MerchantReportResponse;
 import dk.dtu.pay.merchant.domain.service.MerchantService;
-// import dk.dtu.pay.payment.domain.model.Payment;
+import dk.dtu.pay.payment.domain.model.Payment;
 
-/**import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.Incoming;**/
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -33,15 +33,15 @@ public class MerchantResource {
     @Inject
     MerchantService merchantService;
 
-    /**@Channel("merchant-report-requests-out")
-    Emitter<String> reportRequestEmitter;**/
+    /@Channel("merchant-report-requests-out")
+    Emitter<String> reportRequestEmitter;
 
     private final ObjectMapper mapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     // correlationId -> future report
-    /**private static final Map<String, CompletableFuture<List<Payment>>> pendingReports =
-            new ConcurrentHashMap<>();**/
+    private static final Map<String, CompletableFuture<List<Payment>>> pendingReports =
+            new ConcurrentHashMap<>();
 
     // ---------- basic merchant API ----------
 
@@ -66,7 +66,7 @@ public class MerchantResource {
 
     // ---------- merchant report over RabbitMQ ----------
 
-    /**@GET
+    @GET
     @Path("/{id}/report")
     public Response getMerchantReport(@PathParam("id") String merchantId) {
         String correlationId = UUID.randomUUID().toString();
@@ -90,10 +90,10 @@ public class MerchantResource {
                     .entity("Timed out while waiting for merchant report")
                     .build();
         }
-    }**/
+    }
 
     // handle replies coming back from payment service
-    /**@Incoming("merchant-report-replies-in")
+    @Incoming("merchant-report-replies-in")
     public void onMerchantReportReply(String rawResponse) {
         try {
             MerchantReportResponse response =
@@ -112,5 +112,5 @@ public class MerchantResource {
         } catch (IOException e) {
             System.err.println("Failed to handle merchant report reply: " + e.getMessage());
         }
-    }**/
+    }
 }
