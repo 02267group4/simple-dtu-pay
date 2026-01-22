@@ -1,4 +1,5 @@
 # dockerfile
+# File: token_service/Dockerfile
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /workspace
 
@@ -13,5 +14,5 @@ RUN mvn -B package -DskipTests -Dquarkus.package.type=uber-jar
 FROM eclipse-temurin:21-jre
 WORKDIR /work
 COPY --from=build /workspace/target/*.jar /work/app.jar
-EXPOSE 8484
+EXPOSE 8084
 CMD ["java","-jar","/work/app.jar"]
