@@ -27,7 +27,7 @@ public class RabbitMQPaymentRequestedConsumer {
 
     @Inject
     public RabbitMQPaymentRequestedConsumer(TokenService tokenService,
-            RabbitMQTokenValidationResultPublisher publisher) {
+                                            RabbitMQTokenValidationResultPublisher publisher) {
         this.tokenService = tokenService;
         this.publisher = publisher;
     }
@@ -47,8 +47,15 @@ public class RabbitMQPaymentRequestedConsumer {
     private void start() {
         try {
             ConnectionFactory factory = new ConnectionFactory();
-            String host = System.getenv().getOrDefault("RABBIT_HOST", "localhost");
+
+            String host = firstNonBlank(
+                    System.getenv("RABBIT_HOST"),
+                    System.getenv("QUARKUS_RABBITMQ_HOST"),
+                    "rabbitmq",
+                    "localhost"
+            );
             factory.setHost(host);
+            factory.setPort(5672);
 
             System.out.println("RabbitMQPaymentRequestedConsumer starting — will connect to: " + host);
 
@@ -83,5 +90,12 @@ public class RabbitMQPaymentRequestedConsumer {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    private static String firstNonBlank(String... candidates) {
+        for (String c : candidates) {
+            if (c != null && !c.isBlank()) return c;
+        }
+        return null;
     }
 }
