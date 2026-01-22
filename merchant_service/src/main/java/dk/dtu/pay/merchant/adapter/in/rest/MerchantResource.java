@@ -1,16 +1,10 @@
 package dk.dtu.pay.merchant.adapter.in.rest;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.dtu.pay.merchant.domain.model.Merchant;
-import dk.dtu.pay.merchant.domain.model.MerchantReportEvents.MerchantReportRequest;
-import dk.dtu.pay.merchant.domain.model.MerchantReportEvents.MerchantReportResponse;
+import dk.dtu.pay.merchant.domain.model.PaymentDTO;
 import dk.dtu.pay.merchant.domain.service.MerchantService;
-import dk.dtu.pay.payment.domain.model.Payment;
-
-import org.eclipse.microprofile.reactive.messaging.Channel;
-import org.eclipse.microprofile.reactive.messaging.Emitter;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
+import dk.dtu.pay.merchant.adapter.out.messaging.RabbitMQMerchantReportPublisher;
+import dk.dtu.pay.merchant.adapter.out.request.MerchantReportStore;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -18,12 +12,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Path("/merchants")
@@ -93,7 +84,7 @@ public class MerchantResource {
             return Response.ok(payments).build();
 
         } catch (Exception e) {
-            pendingReports.remove(correlationId);
+            reportStore.remove(correlationId);
             return Response.status(Response.Status.GATEWAY_TIMEOUT)
                     .entity("Timed out while waiting for merchant report")
                     .build();

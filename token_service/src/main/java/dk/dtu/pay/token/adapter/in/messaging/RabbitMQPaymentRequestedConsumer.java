@@ -15,6 +15,8 @@ import jakarta.inject.Inject;
 
 import java.nio.charset.StandardCharsets;
 
+import dk.dtu.pay.token.domain.model.TokenInfo;
+
 @ApplicationScoped
 public class RabbitMQPaymentRequestedConsumer {
 
@@ -70,8 +72,8 @@ public class RabbitMQPaymentRequestedConsumer {
 
                 PaymentRequested event = mapper.readValue(delivery.getBody(), PaymentRequested.class);
                 try {
-                    String customerId = tokenService.consumeToken(event.token());
-                    publisher.publishValidated(event.paymentId(), customerId);
+                    TokenInfo info = tokenService.consumeToken(event.token());
+                    publisher.publishValidated(event.paymentId(), info.customerId(), info.bankAccountId());
                 } catch (Exception e) {
                     publisher.publishRejected(event.paymentId(), e.getMessage());
                 }

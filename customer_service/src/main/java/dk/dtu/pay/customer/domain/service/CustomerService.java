@@ -1,8 +1,10 @@
+// java
 package dk.dtu.pay.customer.domain.service;
 
 import dk.dtu.pay.customer.application.port.out.CustomerRepositoryPort;
 import dk.dtu.pay.customer.adapter.out.messaging.RabbitMQTokenIssueRequestPublisher;
 import dk.dtu.pay.customer.adapter.out.messaging.RabbitMQTokenListRequestPublisher;
+import dk.dtu.pay.customer.adapter.out.request.RequestStore;
 import dk.dtu.pay.customer.domain.model.Customer;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -15,13 +17,16 @@ public class CustomerService {
     private final CustomerRepositoryPort repo;
     private final RabbitMQTokenIssueRequestPublisher issuePublisher;
     private final RabbitMQTokenListRequestPublisher listPublisher;
+    private final RequestStore requestStore;
 
     public CustomerService(CustomerRepositoryPort repo,
                            RabbitMQTokenIssueRequestPublisher issuePublisher,
-                           RabbitMQTokenListRequestPublisher listPublisher) {
+                           RabbitMQTokenListRequestPublisher listPublisher,
+                           RequestStore requestStore) {
         this.repo = repo;
         this.issuePublisher = issuePublisher;
         this.listPublisher = listPublisher;
+        this.requestStore = requestStore;
     }
 
     public Customer registerCustomer(Customer req) {
@@ -36,16 +41,19 @@ public class CustomerService {
     }
 
     public void requestTokenIssue(String requestId, String customerId, int count) throws UnknownCustomerException {
-        if (customerNotFound(customerId)) {
+        Optional<Customer> customerOpt = repo.findByCustomerId(customerId);
+        if (customerOpt.isEmpty()) {
             throw new UnknownCustomerException("customer with id \"" + customerId + "\" is unknown");
         }
-        issuePublisher.publish(requestId, customerId, count);
+        Customer customer = customerOpt.get();
+        issuePublisher.publish(requestId, customerId, customer.getBankAccountId(), count);
     }
 
     public void requestTokenList(String requestId, String customerId) throws UnknownCustomerException {
         if (customerNotFound(customerId)) {
             throw new UnknownCustomerException("customer with id \"" + customerId + "\" is unknown");
         }
+
         listPublisher.publish(requestId, customerId);
     }
 

@@ -6,12 +6,20 @@ import jakarta.inject.Inject;
 import jakarta.enterprise.event.Observes;
 import io.quarkus.runtime.StartupEvent;
 import dk.dtu.pay.payment.adapter.in.messaging.RabbitMQTokenValidationResultConsumer;
+import dk.dtu.pay.payment.adapter.in.messaging.RabbitMQManagerReportRequestConsumer;
+import dk.dtu.pay.payment.adapter.in.messaging.RabbitMQMerchantReportRequestConsumer;
 
 @ApplicationScoped
 public class MessagingStartup {
 
     @Inject
     Instance<RabbitMQTokenValidationResultConsumer> tokenValidationResultConsumer;
+
+    @Inject
+    Instance<RabbitMQManagerReportRequestConsumer> managerReportRequestConsumer;
+
+    @Inject
+    Instance<RabbitMQMerchantReportRequestConsumer> merchantReportRequestConsumer;
 
     void onStart(@Observes StartupEvent ev) {
         RabbitMQTokenValidationResultConsumer res = tokenValidationResultConsumer.get();
@@ -21,5 +29,19 @@ public class MessagingStartup {
         );
 
         if (res != null) res.startListening();
+
+        // Start Manager Report request consumer (handles requests from manager_service)
+        RabbitMQManagerReportRequestConsumer managerReqConsumer = managerReportRequestConsumer.get();
+        System.out.println("MessagingStartup (Payment Service) onStart — managerReportRequestConsumer=" +
+                (managerReqConsumer == null ? "NULL" : "OK@" + System.identityHashCode(managerReqConsumer))
+        );
+        if (managerReqConsumer != null) managerReqConsumer.startListening();
+
+        // Start Merchant Report request consumer (handles requests from merchant_service)
+        RabbitMQMerchantReportRequestConsumer merchantReqConsumer = merchantReportRequestConsumer.get();
+        System.out.println("MessagingStartup (Payment Service) onStart — merchantReportRequestConsumer=" +
+                (merchantReqConsumer == null ? "NULL" : "OK@" + System.identityHashCode(merchantReqConsumer))
+        );
+        if (merchantReqConsumer != null) merchantReqConsumer.startListening();
     }
 }

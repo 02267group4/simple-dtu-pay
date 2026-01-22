@@ -6,7 +6,10 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import dk.dtu.pay.customer.adapter.out.request.RequestStore;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,6 +20,9 @@ public class CustomerResource {
 
     @Inject
     CustomerService customerService;
+
+    @Inject
+    RequestStore requestStore;
 
     @POST
     public Response registerCustomer(Customer req) {
@@ -33,30 +39,71 @@ public class CustomerResource {
     // Request token issuance (async) — returns requestId
     @POST
     @Path("{id}/tokens")
-    public Response requestTokens(@PathParam("id") String id, @QueryParam("count") @DefaultValue("1") int count) {
+    public Response requestTokens(@PathParam("id") String id,
+                                  @QueryParam("count") @DefaultValue("1") int count) {
+
         String requestId = UUID.randomUUID().toString();
-        try {
-            customerService.requestTokenIssue(requestId, id, count);
+        requestStore.start(requestId); // ALWAYS start if requestId is returned
+
+        // validation failure → async rejection
+        if (count < 1 || count > 5) {
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("error", "Requested token count must be between 1 and 5");
+            errorResult.put("tokens", List.of());
+            requestStore.complete(requestId, errorResult);
+
             return Response.status(Response.Status.ACCEPTED)
                     .entity(Map.of("requestId", requestId))
                     .build();
+        }
+
+        try {
+            customerService.requestTokenIssue(requestId, id, count);
+
+            return Response.status(Response.Status.ACCEPTED)
+                    .entity(Map.of("requestId", requestId))
+                    .build();
+
         } catch (CustomerService.UnknownCustomerException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("error", e.getMessage());
+            errorResult.put("tokens", List.of());
+            requestStore.complete(requestId, errorResult);
+
+            return Response.status(Response.Status.ACCEPTED)
+                    .entity(Map.of("requestId", requestId))
+                    .build();
         }
     }
+
+
 
     // Request token list (async) — returns requestId
     @GET
     @Path("{id}/tokens")
     public Response requestTokenList(@PathParam("id") String id) {
         String requestId = UUID.randomUUID().toString();
+        requestStore.start(requestId);
+
         try {
             customerService.requestTokenList(requestId, id);
-            return Response.status(Response.Status.ACCEPTED)
-                    .entity(Map.of("requestId", requestId))
-                    .build();
+
         } catch (CustomerService.UnknownCustomerException e) {
-            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            // COMPLETE the async request
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("error", e.getMessage());
+            errorResult.put("tokens", List.of());
+            requestStore.complete(requestId, errorResult);
         }
+
+        // ALWAYS return 202 with requestId
+        return Response.status(Response.Status.ACCEPTED)
+                .entity(Map.of("requestId", requestId))
+                .build();
     }
+
+
 }
