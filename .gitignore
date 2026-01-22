@@ -10,6 +10,7 @@ quarkus-app/
 .classpath
 .project
 .settings/
+Agents.md
 
 # OS
 .DS_Store
