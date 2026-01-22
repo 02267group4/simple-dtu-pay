@@ -6,6 +6,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public class PaymentRequest {
     public String token;
     public String merchantId;
+    public String merchantBankAccountId;
     public int amount;
     public String description;
 

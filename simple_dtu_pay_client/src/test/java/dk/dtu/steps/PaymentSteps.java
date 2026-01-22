@@ -71,7 +71,7 @@ public class PaymentSteps {
 
     @Given("the customer has a valid token")
     public void customerHasValidToken() {
-        customerToken = dtuPay.requestToken(TestContext.customerId);
+        customerToken = dtuPay.requestToken(TestContext.customerId, customerBankId);
 
         assertNotNull("Token must not be null", customerToken);
         assertFalse("Token must not be empty", customerToken.isBlank());
@@ -79,7 +79,7 @@ public class PaymentSteps {
 
     @When("the merchant initiates a payment for {int} kr by the customer using the token")
     public void makePayment(int amount) {
-        paymentId = dtuPay.payAsync(customerToken, TestContext.merchantId, amount, paymentDescription);
+        paymentId = dtuPay.payAsync(customerToken, TestContext.merchantId, merchantBankId, amount, paymentDescription);
         assertNotNull("paymentId must not be null", paymentId);
 
         paymentSuccess = dtuPay.waitForPaymentCompleted(paymentId, 5000);
@@ -88,7 +88,7 @@ public class PaymentSteps {
     @When("the merchant initiates a payment for {int} kr by the customer without a token")
     public void makePaymentWithoutToken(int amount) {
         try {
-            paymentId = dtuPay.payAsync(null, TestContext.merchantId, amount, paymentDescription);
+            paymentId = dtuPay.payAsync(null, TestContext.merchantId, merchantBankId, amount, paymentDescription);
             paymentSuccess = dtuPay.waitForPaymentCompleted(paymentId, 3000);
         } catch (Exception e) {
             paymentSuccess = false;

@@ -9,34 +9,36 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import dk.dtu.pay.token.domain.model.TokenInfo;
+
 @ApplicationScoped
 public class InMemoryTokenRepository implements TokenRepositoryPort {
 
-    // token -> customerId
-    private final Map<String, String> tokenToCustomer = new ConcurrentHashMap<>();
+    // token -> TokenInfo
+    private final Map<String, TokenInfo> tokenToInfo = new ConcurrentHashMap<>();
 
     @Override
-    public void store(String token, String customerId) {
-        tokenToCustomer.put(token, customerId);
+    public void store(String token, String customerId, String bankAccountId) {
+        tokenToInfo.put(token, new TokenInfo(customerId, bankAccountId));
     }
 
     @Override
-    public Optional<String> consume(String token) {
+    public Optional<TokenInfo> consume(String token) {
         if (token == null) {
             return Optional.empty();
         }
-        return Optional.ofNullable(tokenToCustomer.remove(token));
+        return Optional.ofNullable(tokenToInfo.remove(token));
     }
 
     @Override
     public boolean contains(String token) {
-        return tokenToCustomer.containsKey(token);
+        return tokenToInfo.containsKey(token);
     }
 
     @Override
     public List<String> findByCustomerId(String customerId) {
-        return tokenToCustomer.entrySet().stream()
-                .filter(e -> customerId.equals(e.getValue()))
+        return tokenToInfo.entrySet().stream()
+                .filter(e -> customerId.equals(e.getValue().customerId()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toList());
     }

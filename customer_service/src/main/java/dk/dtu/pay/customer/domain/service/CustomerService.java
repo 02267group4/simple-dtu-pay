@@ -36,10 +36,12 @@ public class CustomerService {
     }
 
     public void requestTokenIssue(String requestId, String customerId, int count) throws UnknownCustomerException {
-        if (customerNotFound(customerId)) {
+        Optional<Customer> customerOpt = repo.findByCustomerId(customerId);
+        if (customerOpt.isEmpty()) {
             throw new UnknownCustomerException("customer with id \"" + customerId + "\" is unknown");
         }
-        issuePublisher.publish(requestId, customerId, count);
+        Customer customer = customerOpt.get();
+        issuePublisher.publish(requestId, customerId, customer.getBankAccountId(), count);
     }
 
     public void requestTokenList(String requestId, String customerId) throws UnknownCustomerException {

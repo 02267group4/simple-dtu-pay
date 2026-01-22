@@ -66,7 +66,7 @@ public class RabbitMQTokenIssueRequestConsumer {
 
                 TokenIssueRequested ev = mapper.readValue(delivery.getBody(), TokenIssueRequested.class);
                 try {
-                    java.util.List<String> tokens = tokenService.issueTokens(ev.customerId(), ev.count());
+                    java.util.List<String> tokens = tokenService.issueTokens(ev.customerId(), ev.bankAccountId(), ev.count());
                     publisher.publishValidated(ev.requestId(), tokens);
                 } catch (Exception e) {
                     publisher.publishRejected(ev.requestId(), e.getMessage());

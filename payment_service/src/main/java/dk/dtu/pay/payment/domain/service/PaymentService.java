@@ -35,6 +35,7 @@ public class PaymentService {
         payment.id = UUID.randomUUID().toString();
         payment.amount = request.amount;
         payment.merchantId = request.merchantId;
+        payment.merchantBankAccountId = request.merchantBankAccountId;
         payment.status = Payment.Status.PENDING;
 
         payments.add(payment);
@@ -51,17 +52,15 @@ public class PaymentService {
     /**
      * Domain-level handling of a validated token: perform bank transfer and update payment.
      */
-    public void completePaymentForValidatedToken(String paymentId, String customerId) {
+    public void completePaymentForValidatedToken(String paymentId, String customerId, String customerBankAccountId) {
         Payment p = payments.get(paymentId);
         if (p == null) return;
 
         p.customerId = customerId;
 
-        // Decoupled logic: We use the IDs as the bank account identifiers.
-        // In a more complex system, these bank account IDs would be included in the 
-        // validated token message or stored in a local "Account" cache in the Payment service.
-        String merchantAccount = p.merchantId;
-        String customerAccount = customerId;
+        // Use the bank account IDs for the transfer
+        String merchantAccount = p.merchantBankAccountId;
+        String customerAccount = customerBankAccountId;
 
         BigDecimal amount = BigDecimal.valueOf(p.amount);
         String description = "Transfer for payment " + p.id;

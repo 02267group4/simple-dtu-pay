@@ -48,8 +48,8 @@ public class SimpleDTUPay {
         }
     }
 
-    public String requestToken(String customerId) {
-        TokenRequest req = new TokenRequest(customerId);
+    public String requestToken(String customerId, String bankAccountId) {
+        TokenRequest req = new TokenRequest(customerId, bankAccountId);
 
         try (Response response = tokenTarget.path("tokens")
                 .request(MediaType.APPLICATION_JSON)
@@ -68,8 +68,8 @@ public class SimpleDTUPay {
 
     // Async payment initiation
     // returns paymentId (or throws)
-    public String payAsync(String token, String merchantId, int amount, String description) {
-        PaymentRequest req = new PaymentRequest(token, merchantId, amount, description);
+    public String payAsync(String token, String merchantId, String merchantBankAccountId, int amount, String description) {
+        PaymentRequest req = new PaymentRequest(token, merchantId, merchantBankAccountId, amount, description);
 
         try (Response response = paymentTarget.path("payments")
                 .request(MediaType.APPLICATION_JSON)

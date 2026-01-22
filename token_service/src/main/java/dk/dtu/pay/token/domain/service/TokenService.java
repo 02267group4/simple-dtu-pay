@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import dk.dtu.pay.token.domain.model.TokenInfo;
+
 @ApplicationScoped
 public class TokenService {
 
@@ -16,13 +18,13 @@ public class TokenService {
         this.tokenRepo = tokenRepo;
     }
 
-    public String issueToken(String customerId) {
+    public String issueToken(String customerId, String bankAccountId) {
         String token = UUID.randomUUID().toString();
-        tokenRepo.store(token, customerId);
+        tokenRepo.store(token, customerId, bankAccountId);
         return token;
     }
 
-    public List<String> issueTokens(String customerId, int count) throws InvalidTokenException {
+    public List<String> issueTokens(String customerId, String bankAccountId, int count) throws InvalidTokenException {
         if (count < 1 || count > 5) {
             throw new InvalidTokenException("Requested token count must be between 1 and 5");
         }
@@ -39,13 +41,13 @@ public class TokenService {
         List<String> issued = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             String token = UUID.randomUUID().toString();
-            tokenRepo.store(token, customerId);
+            tokenRepo.store(token, customerId, bankAccountId);
             issued.add(token);
         }
         return issued;
     }
 
-    public String consumeToken(String token) throws InvalidTokenException {
+    public TokenInfo consumeToken(String token) throws InvalidTokenException {
         if (token == null) {
             throw new InvalidTokenException("Token cannot be null");
         }
