@@ -1,6 +1,6 @@
 package dk.dtu.pay.merchant.domain.model;
 
-import dk.dtu.pay.payment.domain.model.Payment;
+// import dk.dtu.pay.payment.domain.model.Payment;
 import java.util.List;
 
 public class MerchantReportEvents {
@@ -20,8 +20,8 @@ public class MerchantReportEvents {
     }
 
     // Response sent from Payment service -> Merchant facade
-    public static class MerchantReportResponse {
-        public String correlationId;
+    public static class MerchantReportResponse {}
+       /* public String correlationId;
         public List<Payment> payments;
 
         public MerchantReportResponse() {
@@ -31,5 +31,5 @@ public class MerchantReportEvents {
             this.correlationId = correlationId;
             this.payments = payments;
         }
-    }
+    }*/
 }
