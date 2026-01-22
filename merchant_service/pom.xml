@@ -13,7 +13,7 @@
 
     <artifactId>merchant-service</artifactId>
 
-    <dependencies>
+   <dependencies>
         <!-- Quarkus Core -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -28,11 +28,24 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
 
-        <!-- RabbitMQ -->
+        <!-- Quarkus Messaging (MicroProfile Reactive Messaging API: Channel, Emitter, Incoming) -->
         <dependency>
-            <groupId>com.rabbitmq</groupId>
-            <artifactId>amqp-client</artifactId>
-            <version>5.22.0</version>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-messaging</artifactId>
+        </dependency>
+
+        <!-- RabbitMQ connector for Quarkus Messaging -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-messaging-rabbitmq</artifactId>
+        </dependency>
+
+        <!-- Use Payment domain model from the payment-service module -->
+        <dependency>
+            <groupId>dk.dtu</groupId>
+            <artifactId>payment-service</artifactId>
+            <!-- same as parent version = 1.0.0-SNAPSHOT -->
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 
