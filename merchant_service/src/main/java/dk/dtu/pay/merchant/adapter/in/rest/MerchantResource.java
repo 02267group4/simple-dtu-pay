@@ -12,6 +12,7 @@ import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -26,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Path("/merchants")
+@ApplicationScoped
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class MerchantResource {
@@ -33,17 +35,19 @@ public class MerchantResource {
     @Inject
     MerchantService merchantService;
 
+    // Outgoing request channel → payment-service
+    // Matches: mp.messaging.outgoing.merchant-report-requests-out...
     @Channel("merchant-report-requests-out")
     Emitter<String> reportRequestEmitter;
 
     private final ObjectMapper mapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    // correlationId -> future report
+    // correlationId -> Future waiting for report reply
     private static final Map<String, CompletableFuture<List<Payment>>> pendingReports =
             new ConcurrentHashMap<>();
 
-    // ---------- basic merchant API ----------
+    // ----------------- BASIC MERCHANT API -----------------
 
     @POST
     public Response register(Merchant req) {
@@ -64,24 +68,28 @@ public class MerchantResource {
         return Response.noContent().build();
     }
 
-    // ---------- merchant report over RabbitMQ ----------
+    // ----------------- MERCHANT REPORT (RabbitMQ) -----------------
 
     @GET
-    @Path("/{id}/report")
+    @Path("/{id}/reports")
     public Response getMerchantReport(@PathParam("id") String merchantId) {
         String correlationId = UUID.randomUUID().toString();
         CompletableFuture<List<Payment>> future = new CompletableFuture<>();
+
         pendingReports.put(correlationId, future);
 
         try {
-            // send request event to payment service
+            // Create request JSON
             String json = mapper.writeValueAsString(
                     new MerchantReportRequest(correlationId, merchantId)
             );
+
+            // Send RabbitMQ request → payment-service
             reportRequestEmitter.send(json);
 
-            // wait (max 5 seconds) for async reply
+            // Wait (up to 5 seconds) for async reply
             List<Payment> payments = future.get(5, TimeUnit.SECONDS);
+
             return Response.ok(payments).build();
 
         } catch (Exception e) {
@@ -92,7 +100,8 @@ public class MerchantResource {
         }
     }
 
-    // handle replies coming back from payment service
+    // Incoming reply from payment-service
+    // Matches: mp.messaging.incoming.merchant-report-replies-in...
     @Incoming("merchant-report-replies-in")
     public void onMerchantReportReply(String rawResponse) {
         try {
@@ -109,6 +118,7 @@ public class MerchantResource {
             if (future != null) {
                 future.complete(response.payments);
             }
+
         } catch (IOException e) {
             System.err.println("Failed to handle merchant report reply: " + e.getMessage());
         }

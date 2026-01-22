@@ -2,18 +2,21 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- Link to the root multi-module pom -->
     <parent>
         <groupId>dk.dtu</groupId>
         <artifactId>simple-dtu-pay</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath> <!-- Add this to be explicit -->
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>payment-service</artifactId>
 
     <dependencies>
+
         <!-- Quarkus Core -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -28,23 +31,33 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
 
-        <!-- RabbitMQ -->
+        <!--  REQUIRED for @Incoming, @Channel, Emitter -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-messaging-rabbitmq</artifactId>
+        </dependency>
+
+        <!-- low-level AMQP Java client -->
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
             <version>5.22.0</version>
         </dependency>
 
+        <!-- SOAP / FastMoney BankService -->
         <dependency>
             <groupId>com.sun.xml.ws</groupId>
             <artifactId>jaxws-ri</artifactId>
             <version>4.0.3</version>
             <type>pom</type>
         </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
+
+            <!-- Quarkus build plugin -->
             <plugin>
                 <groupId>io.quarkus.platform</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
@@ -58,6 +71,8 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Generates BankService Java sources -->
             <plugin>
                 <groupId>com.sun.xml.ws</groupId>
                 <artifactId>jaxws-maven-plugin</artifactId>
@@ -78,6 +93,8 @@
                     <sourceDestDir>src/main/java</sourceDestDir>
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
+
 </project>

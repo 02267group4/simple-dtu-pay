@@ -47,6 +47,11 @@ public class PaymentService {
     public List<Payment> getPayments() {
         return payments.all();
     }
+    
+    public List<Payment> getPaymentsForMerchant(String merchantId) {
+        return payments.findByMerchant(merchantId);
+    }
+
 
     /**
      * Domain-level handling of a validated token: perform bank transfer and update payment.
