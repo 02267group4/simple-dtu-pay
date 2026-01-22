@@ -10,4 +10,6 @@ public interface PaymentRepositoryPort {
 
     Payment get(String id);
     void update(Payment p);
+    
+    List<Payment> findByMerchant(String merchantId);
 }

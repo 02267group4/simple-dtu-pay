@@ -9,6 +9,7 @@ public class Payment {
     public String customerId;
     public String merchantId;
     public String merchantBankAccountId;
+    public String token;
 
     public Status status;
     public String failureReason;
