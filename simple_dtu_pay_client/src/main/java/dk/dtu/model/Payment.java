@@ -8,6 +8,7 @@ public class Payment {
     public int amount;
     public String customerId;
     public String merchantId;
+    public String token;         // Token used for the payment
 
     public String status;        // "PENDING", "COMPLETED", "FAILED"
     public String failureReason; // null if ok

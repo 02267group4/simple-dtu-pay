@@ -144,6 +144,13 @@ public class SimpleDTUPay {
                 });
     }
 
+    public List<Payment> getCustomerReport(String customerId) {
+        return customerTarget.path("customers/" + customerId + "/report")
+                .request(MediaType.APPLICATION_JSON)
+                .get(new GenericType<List<Payment>>() {
+                });
+    }
+
     public void close() {
         client.close();
     }
