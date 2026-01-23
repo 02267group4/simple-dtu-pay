@@ -2,6 +2,7 @@ package dk.dtu.pay;
 
 import dk.dtu.pay.customer.adapter.in.messaging.RabbitMQTokenListResultConsumer;
 import dk.dtu.pay.customer.adapter.in.messaging.RabbitMQTokenIssueResultConsumer;
+import dk.dtu.pay.customer.adapter.in.messaging.RabbitMQCustomerReportResponseConsumer;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
@@ -18,6 +19,9 @@ public class MessagingStartup {
     @Inject
     Instance<RabbitMQTokenIssueResultConsumer> tokenIssueResultConsumer;
 
+    @Inject
+    Instance<RabbitMQCustomerReportResponseConsumer> customerReportResponseConsumer;
+
     void onStart(@Observes StartupEvent ev) {
 
         RabbitMQTokenListResultConsumer listConsumer = null;
@@ -30,10 +34,16 @@ public class MessagingStartup {
             issueConsumer = tokenIssueResultConsumer.get();
         }
 
+        RabbitMQCustomerReportResponseConsumer reportConsumer = null;
+        if (customerReportResponseConsumer != null && customerReportResponseConsumer.isResolvable()) {
+            reportConsumer = customerReportResponseConsumer.get();
+        }
+
         System.out.println(
                 "MessagingStartup (Customer Service) onStart — " +
                         "tokenListResultConsumer=" + (listConsumer != null) +
-                        ", tokenIssueResultConsumer=" + (issueConsumer != null)
+                        ", tokenIssueResultConsumer=" + (issueConsumer != null) +
+                        ", customerReportResponseConsumer=" + (reportConsumer != null)
         );
 
         if (issueConsumer != null) {
@@ -44,6 +54,11 @@ public class MessagingStartup {
         if (listConsumer != null) {
             System.out.println("Starting RabbitMQTokenListResultConsumer listener");
             listConsumer.startListening();
+        }
+
+        if (reportConsumer != null) {
+            System.out.println("Starting RabbitMQCustomerReportResponseConsumer listener");
+            reportConsumer.startListening();
         }
     }
 }

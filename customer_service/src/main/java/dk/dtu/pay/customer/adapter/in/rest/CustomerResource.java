@@ -1,7 +1,10 @@
 package dk.dtu.pay.customer.adapter.in.rest;
 
 import dk.dtu.pay.customer.domain.model.Customer;
+import dk.dtu.pay.customer.domain.model.PaymentDTO;
 import dk.dtu.pay.customer.domain.service.CustomerService;
+import dk.dtu.pay.customer.adapter.out.messaging.RabbitMQCustomerReportPublisher;
+import dk.dtu.pay.customer.adapter.out.request.CustomerReportStore;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -12,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Path("/customers")
 @Produces(MediaType.APPLICATION_JSON)
@@ -23,6 +28,12 @@ public class CustomerResource {
 
     @Inject
     RequestStore requestStore;
+
+    @Inject
+    RabbitMQCustomerReportPublisher reportPublisher;
+
+    @Inject
+    CustomerReportStore reportStore;
 
     @POST
     public Response registerCustomer(Customer req) {
@@ -105,5 +116,28 @@ public class CustomerResource {
                 .build();
     }
 
+    // ---------- customer report over RabbitMQ ----------
+
+    @GET
+    @Path("/{id}/report")
+    public Response getCustomerReport(@PathParam("id") String customerId) {
+        String correlationId = UUID.randomUUID().toString();
+        CompletableFuture<List<PaymentDTO>> future = reportStore.createPending(correlationId);
+
+        try {
+            // send request event to payment service
+            reportPublisher.publish(correlationId, customerId);
+
+            // wait (max 5 seconds) for async reply
+            List<PaymentDTO> payments = future.get(5, TimeUnit.SECONDS);
+            return Response.ok(payments).build();
+
+        } catch (Exception e) {
+            reportStore.remove(correlationId);
+            return Response.status(Response.Status.GATEWAY_TIMEOUT)
+                    .entity("Timed out while waiting for customer report")
+                    .build();
+        }
+    }
 
 }

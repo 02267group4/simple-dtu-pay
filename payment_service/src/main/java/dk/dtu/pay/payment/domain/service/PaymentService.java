@@ -36,6 +36,7 @@ public class PaymentService {
         payment.amount = request.amount;
         payment.merchantId = request.merchantId;
         payment.merchantBankAccountId = request.merchantBankAccountId;
+        payment.token = request.token;
         payment.status = Payment.Status.PENDING;
 
         payments.add(payment);
