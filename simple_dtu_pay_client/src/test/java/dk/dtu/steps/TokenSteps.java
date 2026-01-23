@@ -16,7 +16,6 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 public class TokenSteps {
-
     private static final String GATEWAY_BASE = "http://localhost:8080";
     // Poll the customer service request endpoint (RequestStore lives in customer service)
     private static final String TOKEN_SERVICE_BASE = "http://localhost:8081";

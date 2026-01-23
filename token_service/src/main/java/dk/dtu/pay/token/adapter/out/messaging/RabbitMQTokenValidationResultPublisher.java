@@ -31,15 +31,22 @@ public class RabbitMQTokenValidationResultPublisher {
     private void publish(String routingKey, Object payload) {
         try {
             ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost(System.getenv().getOrDefault("RABBIT_HOST", "localhost"));
+
+            String host = firstNonBlank(
+                    System.getenv("RABBIT_HOST"),
+                    System.getenv("QUARKUS_RABBITMQ_HOST"),
+                    "rabbitmq",
+                    "localhost"
+            );
+            factory.setHost(host);
+            factory.setPort(5672);
 
             try (Connection connection = factory.newConnection();
-                    Channel channel = connection.createChannel()) {
+                 Channel channel = connection.createChannel()) {
 
                 channel.exchangeDeclare(EXCHANGE, "topic", true);
                 byte[] body = mapper.writeValueAsBytes(payload);
 
-                // <-- ADDED: log the raw JSON payload and routing key
                 System.out.println(
                         "Publishing to " + routingKey + " payload: " + new String(body, StandardCharsets.UTF_8));
 
@@ -48,5 +55,12 @@ public class RabbitMQTokenValidationResultPublisher {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String firstNonBlank(String... candidates) {
+        for (String c : candidates) {
+            if (c != null && !c.isBlank()) return c;
+        }
+        return null;
     }
 }

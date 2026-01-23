@@ -20,7 +20,15 @@ public class RabbitMQTokenIssueRequestPublisher {
     public void publish(String requestId, String customerId, String bankAccountId, int count) {
         try {
             ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost(System.getenv().getOrDefault("RABBIT_HOST", "localhost"));
+
+            String host = firstNonBlank(
+                    System.getenv("RABBIT_HOST"),
+                    System.getenv("QUARKUS_RABBITMQ_HOST"),
+                    "rabbitmq",
+                    "localhost"
+            );
+            factory.setHost(host);
+            factory.setPort(5672);
 
             try (Connection connection = factory.newConnection();
                  Channel channel = connection.createChannel()) {
@@ -30,12 +38,20 @@ public class RabbitMQTokenIssueRequestPublisher {
                 TokenIssueRequested payload = new TokenIssueRequested(requestId, customerId, bankAccountId, count);
                 byte[] body = mapper.writeValueAsBytes(payload);
 
-                System.out.println("Publishing TokenIssueRequested.java payload: " + new String(body, StandardCharsets.UTF_8));
+                System.out.println("Publishing TokenIssueRequested.java payload: " +
+                        new String(body, StandardCharsets.UTF_8));
 
                 channel.basicPublish(EXCHANGE, ROUTING_KEY, null, body);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String firstNonBlank(String... candidates) {
+        for (String c : candidates) {
+            if (c != null && !c.isBlank()) return c;
+        }
+        return null;
     }
 }

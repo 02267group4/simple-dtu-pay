@@ -1,6 +1,11 @@
 package dk.dtu.service;
 
-import dk.dtu.model.*;
+import dk.dtu.model.Customer;
+import dk.dtu.model.Merchant;
+import dk.dtu.model.Payment;
+import dk.dtu.model.PaymentRequest;
+import dk.dtu.model.Token;
+import dk.dtu.model.TokenRequest;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
@@ -33,8 +38,9 @@ public class SimpleDTUPay {
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(customer, MediaType.APPLICATION_JSON))) {
 
-            if (response.getStatus() != 201)
-                throw new RuntimeException("Reg failed");
+            if (response.getStatus() != 201) {
+                throw new RuntimeException("Customer registration failed: HTTP " + response.getStatus());
+            }
             return response.readEntity(Customer.class).id;
         }
     }
@@ -44,8 +50,9 @@ public class SimpleDTUPay {
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(merchant, MediaType.APPLICATION_JSON))) {
 
-            if (response.getStatus() != 201)
-                throw new RuntimeException("Reg failed");
+            if (response.getStatus() != 201) {
+                throw new RuntimeException("Merchant registration failed: HTTP " + response.getStatus());
+            }
             return response.readEntity(Merchant.class).id;
         }
     }
@@ -61,8 +68,9 @@ public class SimpleDTUPay {
                 throw new NotFoundException(response.readEntity(String.class));
             }
 
-            if (response.getStatus() != 201)
+            if (response.getStatus() != 201) {
                 throw new RuntimeException("Token request failed: HTTP " + response.getStatus());
+            }
 
             return response.readEntity(Token.class).token;
         }
@@ -77,12 +85,25 @@ public class SimpleDTUPay {
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(req, MediaType.APPLICATION_JSON))) {
 
+            String errorBody = null;
+            if (response.getStatus() >= 400) {
+                try {
+                    errorBody = response.readEntity(String.class);
+                } catch (Exception ignored) {
+                    // If the body can't be read, we still throw with status + URL.
+                }
+            }
+
             if (response.getStatus() == 404) {
-                throw new NotFoundException(response.readEntity(String.class));
+                throw new NotFoundException(errorBody != null ? errorBody : "Not found: " + PAYMENT_SERVICE_URL);
             }
 
             if (response.getStatus() != 202) {
-                throw new RuntimeException("Payment request failed: HTTP " + response.getStatus());
+                String msg = "Payment request failed: HTTP " + response.getStatus() + " calling " + PAYMENT_SERVICE_URL;
+                if (errorBody != null && !errorBody.isBlank()) {
+                    msg += " | body: " + errorBody;
+                }
+                throw new RuntimeException(msg);
             }
 
             Payment p = response.readEntity(Payment.class);
@@ -142,6 +163,12 @@ public class SimpleDTUPay {
                 .request(MediaType.APPLICATION_JSON)
                 .get(new GenericType<List<Payment>>() {
                 });
+    }
+
+    public List<Payment> getCustomerReport(String customerId) {
+        return customerTarget.path("customers/" + customerId + "/report")
+                .request(MediaType.APPLICATION_JSON)
+                .get(new GenericType<List<Payment>>() {});
     }
 
     public void close() {
