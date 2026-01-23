@@ -79,11 +79,30 @@ public class PaymentSteps {
 
     @When("the merchant initiates a payment for {int} kr by the customer using the token")
     public void makePayment(int amount) {
+        assertNotNull("customerToken must not be null", customerToken);
+        TestContext.usedToken = customerToken;
         paymentId = dtuPay.payAsync(customerToken, TestContext.merchantId, merchantBankId, amount, paymentDescription);
         assertNotNull("paymentId must not be null", paymentId);
 
         paymentSuccess = dtuPay.waitForPaymentCompleted(paymentId, 5000);
     }
+
+    @When("the merchant initiates a payment for {int} kr by the customer using the same token")
+    public void makePaymentUsingSameToken(int amount) {
+        assertNotNull("No previously used token available", TestContext.usedToken);
+
+        paymentId = dtuPay.payAsync(
+                TestContext.usedToken,
+                TestContext.merchantId,
+                merchantBankId,
+                amount,
+                paymentDescription
+        );
+        assertNotNull("paymentId must not be null", paymentId);
+
+        paymentSuccess = dtuPay.waitForPaymentCompleted(paymentId, 5000);
+    }
+
 
     @When("the merchant initiates a payment for {int} kr by the customer without a token")
     public void makePaymentWithoutToken(int amount) {
