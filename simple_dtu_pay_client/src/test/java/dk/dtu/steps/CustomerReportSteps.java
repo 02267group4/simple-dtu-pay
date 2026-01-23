@@ -6,6 +6,9 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import static org.junit.Assert.*;
 
 public class CustomerReportSteps {
@@ -46,9 +49,46 @@ public class CustomerReportSteps {
         assertNotNull("Report should not be null", report);
         assertFalse("Report should not be empty", report.isEmpty());
 
+        boolean found = report.stream()
+                .anyMatch(p -> p.token != null && !p.token.isEmpty());
 
-        // Since we can't directly access the token variable from PaymentSteps,
-        // we just verify that there's a payment with a non-null token field
-        // (In a real scenario, the customer would see which token was consumed)
+        assertTrue("Customer report should contain payments with tokens", found);
+    }
+
+    @Then("the customer report is empty")
+    public void verifyReportIsEmpty() {
+        assertNotNull("Report should not be null", report);
+        assertTrue("Report should be empty", report.isEmpty());
+    }
+
+    @Then("the customer report contains {int} payments")
+    public void verifyReportContainsPaymentCount(int expectedCount) {
+        assertNotNull("Report should not be null", report);
+        assertEquals("Customer report should contain " + expectedCount + " payments",
+                expectedCount, report.size());
+    }
+
+    @Then("the customer report does not contain a payment of {int} kr")
+    public void verifyReportDoesNotContainPayment(int amount) {
+        assertNotNull("Report should not be null", report);
+
+        boolean found = report.stream()
+                .anyMatch(p -> p.amount == amount);
+
+        assertFalse("Customer report should NOT contain a payment of " + amount, found);
+    }
+
+    @Then("the customer report contains payments to {int} different merchants")
+    public void verifyReportContainsDifferentMerchants(int expectedMerchantCount) {
+        assertNotNull("Report should not be null", report);
+        assertFalse("Report should not be empty", report.isEmpty());
+
+        Set<String> uniqueMerchants = report.stream()
+                .map(p -> p.merchantId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+
+        assertEquals("Customer report should contain payments to " + expectedMerchantCount + " different merchants",
+                expectedMerchantCount, uniqueMerchants.size());
     }
 }
