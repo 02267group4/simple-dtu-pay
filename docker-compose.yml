@@ -72,3 +72,18 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+
+  manager-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: manager_service
+    ports:
+      - "8085:8085"
+    environment:
+      - QUARKUS_RABBITMQ_HOST=rabbitmq
+      - RABBIT_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy

@@ -17,7 +17,7 @@ public class RabbitMQTokenIssueRequestPublisher {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public void publish(String requestId, String customerId, int count) {
+    public void publish(String requestId, String customerId, String bankAccountId, int count) {
         try {
             ConnectionFactory factory = new ConnectionFactory();
 
@@ -35,7 +35,7 @@ public class RabbitMQTokenIssueRequestPublisher {
 
                 channel.exchangeDeclare(EXCHANGE, "topic", true);
 
-                TokenIssueRequested payload = new TokenIssueRequested(requestId, customerId, count);
+                TokenIssueRequested payload = new TokenIssueRequested(requestId, customerId, bankAccountId, count);
                 byte[] body = mapper.writeValueAsBytes(payload);
 
                 System.out.println("Publishing TokenIssueRequested.java payload: " +

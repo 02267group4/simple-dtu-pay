@@ -1,7 +1,10 @@
 package dk.dtu.pay.customer.adapter.in.rest;
 
 import dk.dtu.pay.customer.domain.model.Customer;
+import dk.dtu.pay.customer.domain.model.PaymentDTO;
 import dk.dtu.pay.customer.domain.service.CustomerService;
+import dk.dtu.pay.customer.adapter.out.messaging.RabbitMQCustomerReportPublisher;
+import dk.dtu.pay.customer.adapter.out.request.CustomerReportStore;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -10,8 +13,12 @@ import dk.dtu.pay.customer.adapter.out.request.RequestStore;
 import java.util.HashMap;
 import java.util.List;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @Path("/customers")
 @Produces(MediaType.APPLICATION_JSON)
@@ -23,6 +30,12 @@ public class CustomerResource {
 
     @Inject
     RequestStore requestStore;
+
+    @Inject
+    RabbitMQCustomerReportPublisher reportPublisher;
+
+    @Inject
+    CustomerReportStore reportStore;
 
     @POST
     public Response registerCustomer(Customer req) {
@@ -47,12 +60,11 @@ public class CustomerResource {
 
         // validation failure → async rejection
         if (count < 1 || count > 5) {
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", false);
-            result.put("tokens", List.of()); // must NOT be null
-            result.put("error", "Requested token count must be between 1 and 5");
-
-            requestStore.complete(requestId, result);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("error", "Requested token count must be between 1 and 5");
+            errorResult.put("tokens", List.of());
+            requestStore.complete(requestId, errorResult);
 
             return Response.status(Response.Status.ACCEPTED)
                     .entity(Map.of("requestId", requestId))
@@ -67,12 +79,11 @@ public class CustomerResource {
                     .build();
 
         } catch (CustomerService.UnknownCustomerException e) {
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", false);
-            result.put("tokens", List.of()); // never null
-            result.put("error", e.getMessage());
-
-            requestStore.complete(requestId, result);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("error", e.getMessage());
+            errorResult.put("tokens", List.of());
+            requestStore.complete(requestId, errorResult);
 
             return Response.status(Response.Status.ACCEPTED)
                     .entity(Map.of("requestId", requestId))
@@ -94,10 +105,11 @@ public class CustomerResource {
 
         } catch (CustomerService.UnknownCustomerException e) {
             // COMPLETE the async request
-            requestStore.complete(requestId, Map.of(
-                    "tokens", null,
-                    "error", e.getMessage()
-            ));
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("success", false);
+            errorResult.put("error", e.getMessage());
+            errorResult.put("tokens", List.of());
+            requestStore.complete(requestId, errorResult);
         }
 
         // ALWAYS return 202 with requestId
@@ -106,5 +118,28 @@ public class CustomerResource {
                 .build();
     }
 
+    // ---------- customer report over RabbitMQ ----------
+
+    @GET
+    @Path("/{id}/report")
+    public Response getCustomerReport(@PathParam("id") String customerId) {
+        String correlationId = UUID.randomUUID().toString();
+        CompletableFuture<List<PaymentDTO>> future = reportStore.createPending(correlationId);
+
+        try {
+            // send request event to payment service
+            reportPublisher.publish(correlationId, customerId);
+
+            // wait (max 5 seconds) for async reply
+            List<PaymentDTO> payments = future.get(5, TimeUnit.SECONDS);
+            return Response.ok(payments).build();
+
+        } catch (Exception e) {
+            reportStore.remove(correlationId);
+            return Response.status(Response.Status.GATEWAY_TIMEOUT)
+                    .entity("Timed out while waiting for customer report")
+                    .build();
+        }
+    }
 
 }

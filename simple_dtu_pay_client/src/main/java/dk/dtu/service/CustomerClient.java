@@ -12,16 +12,12 @@ import java.util.Map;
 
 public class CustomerClient {
 
-    /**
-     * Customer service base URL (matches docker-compose port mappings).
-     * Override with env var: CUSTOMER_SERVICE_URL
-     */
-    private static final String CUSTOMER_BASE_URL =
-            System.getenv().getOrDefault("CUSTOMER_SERVICE_URL", "http://localhost:8081");
+    // Base URL of the customer service microservice
+    private static final String BASE_URL = "http://localhost:8081";
 
     // JAX-RS client used for all HTTP interactions
     private final Client client = ClientBuilder.newClient();
-    private final WebTarget target = client.target(CUSTOMER_BASE_URL);
+    private final WebTarget target = client.target(BASE_URL);
 
     public String register(Customer customer) {
         // POST /customers — synchronous customer creation

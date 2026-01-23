@@ -20,8 +20,8 @@ public class RabbitMQTokenValidationResultPublisher {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public void publishValidated(String paymentId, String customerId) {
-        publish(VALIDATED_KEY, new TokenValidationValidated(paymentId, customerId));
+    public void publishValidated(String paymentId, String customerId, String customerBankAccountId) {
+        publish(VALIDATED_KEY, new TokenValidationValidated(paymentId, customerId, customerBankAccountId));
     }
 
     public void publishRejected(String paymentId, String reason) {

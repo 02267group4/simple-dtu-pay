@@ -19,31 +19,19 @@ import java.util.List;
 
 public class SimpleDTUPay {
 
-    /**
-     * Defaults match docker-compose port mappings:
-     *  - customer-service: http://localhost:8081
-     *  - merchant-service: http://localhost:8082
-     *  - payment-service:  http://localhost:8083
-     *  - token-service:    http://localhost:8084
-     *
-     * You can override with env vars:
-     *  CUSTOMER_SERVICE_URL, MERCHANT_SERVICE_URL, PAYMENT_SERVICE_URL, TOKEN_SERVICE_URL
-     */
-    private static final String CUSTOMER_BASE_URL =
-            System.getenv().getOrDefault("CUSTOMER_SERVICE_URL", "http://localhost:8081");
-    private static final String MERCHANT_BASE_URL =
-            System.getenv().getOrDefault("MERCHANT_SERVICE_URL", "http://localhost:8082");
-    private static final String PAYMENT_BASE_URL =
-            System.getenv().getOrDefault("PAYMENT_SERVICE_URL", "http://localhost:8083");
-    private static final String TOKEN_BASE_URL =
-            System.getenv().getOrDefault("TOKEN_SERVICE_URL", "http://localhost:8084");
+    // Microservice endpoints
+    private static final String CUSTOMER_SERVICE_URL = "http://localhost:8081";
+    private static final String MERCHANT_SERVICE_URL = "http://localhost:8082";
+    private static final String PAYMENT_SERVICE_URL = "http://localhost:8083";
+    private static final String TOKEN_SERVICE_URL = "http://localhost:8084";
+    private static final String MANAGER_SERVICE_URL = "http://localhost:8085";
 
     private final Client client = ClientBuilder.newClient();
-
-    private final WebTarget customerTarget = client.target(CUSTOMER_BASE_URL);
-    private final WebTarget merchantTarget = client.target(MERCHANT_BASE_URL);
-    private final WebTarget paymentTarget = client.target(PAYMENT_BASE_URL);
-    private final WebTarget tokenTarget = client.target(TOKEN_BASE_URL);
+    private final WebTarget customerTarget = client.target(CUSTOMER_SERVICE_URL);
+    private final WebTarget merchantTarget = client.target(MERCHANT_SERVICE_URL);
+    private final WebTarget paymentTarget = client.target(PAYMENT_SERVICE_URL);
+    private final WebTarget tokenTarget = client.target(TOKEN_SERVICE_URL);
+    private final WebTarget managerTarget = client.target(MANAGER_SERVICE_URL);
 
     public String register(Customer customer) {
         try (Response response = customerTarget.path("customers")
@@ -69,8 +57,8 @@ public class SimpleDTUPay {
         }
     }
 
-    public String requestToken(String customerId) {
-        TokenRequest req = new TokenRequest(customerId);
+    public String requestToken(String customerId, String bankAccountId) {
+        TokenRequest req = new TokenRequest(customerId, bankAccountId);
 
         try (Response response = tokenTarget.path("tokens")
                 .request(MediaType.APPLICATION_JSON)
@@ -88,24 +76,12 @@ public class SimpleDTUPay {
         }
     }
 
-    /**
-     * Async payment initiation (returns paymentId or throws).
-     */
-    public String payAsync(String token, String merchantId, int amount, String description) {
-        if (token == null || token.isBlank()) {
-            throw new IllegalArgumentException("token must be non-null and non-blank");
-        }
-        if (merchantId == null || merchantId.isBlank()) {
-            throw new IllegalArgumentException("merchantId must be non-null and non-blank");
-        }
-        if (amount <= 0) {
-            throw new IllegalArgumentException("amount must be > 0");
-        }
+    // Async payment initiation
+    // returns paymentId (or throws)
+    public String payAsync(String token, String merchantId, String merchantBankAccountId, int amount, String description) {
+        PaymentRequest req = new PaymentRequest(token, merchantId, merchantBankAccountId, amount, description);
 
-        PaymentRequest req = new PaymentRequest(token, merchantId, amount, description);
-
-        WebTarget target = paymentTarget.path("payments");
-        try (Response response = target
+        try (Response response = paymentTarget.path("payments")
                 .request(MediaType.APPLICATION_JSON)
                 .post(Entity.entity(req, MediaType.APPLICATION_JSON))) {
 
@@ -119,11 +95,11 @@ public class SimpleDTUPay {
             }
 
             if (response.getStatus() == 404) {
-                throw new NotFoundException(errorBody != null ? errorBody : "Not found: " + target.getUri());
+                throw new NotFoundException(errorBody != null ? errorBody : "Not found: " + PAYMENT_SERVICE_URL);
             }
 
             if (response.getStatus() != 202) {
-                String msg = "Payment request failed: HTTP " + response.getStatus() + " calling " + target.getUri();
+                String msg = "Payment request failed: HTTP " + response.getStatus() + " calling " + PAYMENT_SERVICE_URL;
                 if (errorBody != null && !errorBody.isBlank()) {
                     msg += " | body: " + errorBody;
                 }
@@ -135,9 +111,7 @@ public class SimpleDTUPay {
         }
     }
 
-    /**
-     * Poll until COMPLETED or FAILED, returns true if COMPLETED.
-     */
+    // Poll until COMPLETED or FAILED, true if COMPLETED
     public boolean waitForPaymentCompleted(String paymentId, long timeoutMs) {
         long deadline = System.currentTimeMillis() + timeoutMs;
 
@@ -185,8 +159,14 @@ public class SimpleDTUPay {
     }
 
     public List<Payment> getManagerReport() {
-        // If manager reports live somewhere else in your system, point this to the correct service.
-        return paymentTarget.path("manager/reports")
+        return managerTarget.path("manager/reports")
+                .request(MediaType.APPLICATION_JSON)
+                .get(new GenericType<List<Payment>>() {
+                });
+    }
+
+    public List<Payment> getCustomerReport(String customerId) {
+        return customerTarget.path("customers/" + customerId + "/report")
                 .request(MediaType.APPLICATION_JSON)
                 .get(new GenericType<List<Payment>>() {});
     }

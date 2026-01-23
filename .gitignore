@@ -2,7 +2,7 @@
 target/
 *.jar
 quarkus-app/
-
+.env
 # IDE
 .idea/
 *.iml
@@ -10,6 +10,7 @@ quarkus-app/
 .classpath
 .project
 .settings/
+Agents.md
 
 # OS
 .DS_Store

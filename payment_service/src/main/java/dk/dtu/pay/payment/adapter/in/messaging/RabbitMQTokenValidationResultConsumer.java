@@ -75,7 +75,7 @@ public class RabbitMQTokenValidationResultConsumer {
                 System.out.println("TokenValidated raw body: " + raw);
 
                 TokenValidated ev = mapper.readValue(delivery.getBody(), TokenValidated.class);
-                paymentService.completePaymentForValidatedToken(ev.paymentId(), ev.customerId());
+                paymentService.completePaymentForValidatedToken(ev.paymentId(), ev.customerId(), ev.customerBankAccountId());
             }, consumerTag -> {
             });
 

@@ -1,14 +1,15 @@
 package dk.dtu.pay.token.application.port.out;
 
+import dk.dtu.pay.token.domain.model.TokenInfo;
 import java.util.List;
 import java.util.Optional;
 
 public interface TokenRepositoryPort {
 
-    void store(String token, String customerId);
+    void store(String token, String customerId, String bankAccountId);
 
-    // single-use: returns customerId and removes mapping
-    Optional<String> consume(String token);
+    // single-use: returns TokenInfo and removes mapping
+    Optional<TokenInfo> consume(String token);
 
     boolean contains(String token);
 

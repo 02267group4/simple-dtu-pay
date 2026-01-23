@@ -1,0 +1,19 @@
+# Exclude git history
+.git
+.gitignore
+
+# Exclude Maven build artifacts (Important: use **/ to match subdirectories)
+**/target/
+*.jar
+quarkus-app/
+
+# Exclude IDE settings
+.idea/
+.vscode/
+.classpath
+.project
+.settings/
+*.iml
+
+# Exclude local env
+.env

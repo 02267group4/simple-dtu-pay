@@ -1,5 +1,3 @@
-
-
 package dk.dtu.pay.payment.domain.service;
 
 import dk.dtu.pay.payment.adapter.out.messaging.RabbitMQPaymentRequestedPublisher;
@@ -22,7 +20,6 @@ import static org.mockito.Mockito.*;
  *
  * @author Aleksander Sonder (s185289)
  */
-
 class PaymentServiceTest {
 
     @Test
@@ -35,7 +32,8 @@ class PaymentServiceTest {
 
         PaymentRequest req = new PaymentRequest();
         req.amount = 100;
-        req.merchantId = "merchant-bank-account-123";
+        req.merchantId = "merchant-1";
+        req.merchantBankAccountId = "merchant-bank-1";
         req.token = "token-abc";
 
         Payment created = service.pay(req);
@@ -44,7 +42,8 @@ class PaymentServiceTest {
         assertNotNull(created.id);
         assertFalse(created.id.isBlank());
         assertEquals(100, created.amount);
-        assertEquals("merchant-bank-account-123", created.merchantId);
+        assertEquals("merchant-1", created.merchantId);
+        assertEquals("merchant-bank-1", created.merchantBankAccountId);
         assertEquals(Payment.Status.PENDING, created.status);
 
         ArgumentCaptor<Payment> paymentCaptor = ArgumentCaptor.forClass(Payment.class);
@@ -66,12 +65,17 @@ class PaymentServiceTest {
         Payment existing = new Payment();
         existing.id = "payment-1";
         existing.amount = 50;
-        existing.merchantId = "merchant-bank-1";
+        existing.merchantId = "merchant-1";
+        existing.merchantBankAccountId = "merchant-bank-1";
         existing.status = Payment.Status.PENDING;
 
         when(payments.get("payment-1")).thenReturn(existing);
 
-        service.completePaymentForValidatedToken("payment-1", "customer-bank-1");
+        service.completePaymentForValidatedToken(
+                "payment-1",
+                "customer-1",
+                "customer-bank-1"
+        );
 
         verify(bank).transferMoneyFromTo(
                 eq("customer-bank-1"),
@@ -85,7 +89,7 @@ class PaymentServiceTest {
 
         Payment updated = updatedCaptor.getValue();
         assertEquals("payment-1", updated.id);
-        assertEquals("customer-bank-1", updated.customerId);
+        assertEquals("customer-1", updated.customerId);
         assertEquals(Payment.Status.COMPLETED, updated.status);
         assertNull(updated.failureReason);
     }
@@ -101,7 +105,8 @@ class PaymentServiceTest {
         Payment existing = new Payment();
         existing.id = "payment-2";
         existing.amount = 999;
-        existing.merchantId = "merchant-bank-2";
+        existing.merchantId = "merchant-2";
+        existing.merchantBankAccountId = "merchant-bank-2";
         existing.status = Payment.Status.PENDING;
 
         when(payments.get("payment-2")).thenReturn(existing);
@@ -109,11 +114,14 @@ class PaymentServiceTest {
         BankServiceException_Exception ex = mock(BankServiceException_Exception.class);
         when(ex.getMessage()).thenReturn("Insufficient funds");
 
-        doThrow(ex)
-                .when(bank)
+        doThrow(ex).when(bank)
                 .transferMoneyFromTo(anyString(), anyString(), any(BigDecimal.class), anyString());
 
-        service.completePaymentForValidatedToken("payment-2", "customer-bank-2");
+        service.completePaymentForValidatedToken(
+                "payment-2",
+                "customer-2",
+                "customer-bank-2"
+        );
 
         ArgumentCaptor<Payment> updatedCaptor = ArgumentCaptor.forClass(Payment.class);
         verify(payments).update(updatedCaptor.capture());

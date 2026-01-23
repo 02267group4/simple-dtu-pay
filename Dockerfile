@@ -11,13 +11,14 @@ COPY customer_service ./customer_service
 COPY merchant_service ./merchant_service
 COPY payment_service ./payment_service
 COPY token_service ./token_service
+COPY manager_service ./manager_service
 COPY simple_dtu_pay_client ./simple_dtu_pay_client
 
 # Build the specific service
 ARG SERVICE_NAME
 # -pl builds only the service, -am builds its dependencies
 # We skip tests and Hibernate/JAX-WS network calls during image build
-RUN mvn -B -pl ${SERVICE_NAME} -am package \
+RUN mvn -B -pl ${SERVICE_NAME} -am clean package \
     -DskipTests \
     -Dquarkus.package.type=uber-jar
 
